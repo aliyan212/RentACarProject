@@ -3,6 +3,8 @@ package views;
 import database.VehicleDAO;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.collections.transformation.FilteredList;
+import javafx.collections.transformation.SortedList;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
@@ -35,7 +37,11 @@ public class VehicleView {
             ViewHelper.showError("Could not load vehicles", e);
         }
 
-        TableView<Vehicle> table = new TableView<>(data);
+        FilteredList<Vehicle> filteredData = new FilteredList<>(data, p -> true);
+        SortedList<Vehicle> sortedData = new SortedList<>(filteredData);
+
+        TableView<Vehicle> table = new TableView<>(sortedData);
+        sortedData.comparatorProperty().bind(table.comparatorProperty());
         table.getStyleClass().add("data-table");
         table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         table.setMinHeight(280);
@@ -68,11 +74,23 @@ public class VehicleView {
         table.getColumns().add(priceCol);
         table.getColumns().add(ownerCol);
 
+        TextField searchField = ViewHelper.field("🔍 Search fleet by model, ID...");
+        searchField.setPrefWidth(240);
+        searchField.textProperty().addListener((obs, oldVal, newVal) -> {
+            filteredData.setPredicate(v -> {
+                if (newVal == null || newVal.isBlank()) return true;
+                String lower = newVal.toLowerCase().trim();
+                return String.valueOf(v.getCarId()).contains(lower)
+                        || (v.getModel() != null && v.getModel().toLowerCase().contains(lower))
+                        || (v.getPurchasePrice() != null && v.getPurchasePrice().toLowerCase().contains(lower));
+            });
+        });
+
         Button addBtn = new Button("+ Add Vehicle");
         addBtn.getStyleClass().add("btn-primary");
         Button deleteBtn = new Button("🗑 Delete");
         deleteBtn.getStyleClass().add("btn-danger");
-        FlowPane toolbar = new FlowPane(10, 10, addBtn, deleteBtn);
+        FlowPane toolbar = new FlowPane(10, 10, searchField, addBtn, deleteBtn);
         toolbar.setAlignment(Pos.CENTER_LEFT);
 
         addBtn.setOnAction(e -> showAddDialog().ifPresent(v -> {

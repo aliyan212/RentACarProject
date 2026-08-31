@@ -5,6 +5,7 @@ import database.SaleDAO;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
+import javafx.collections.transformation.SortedList;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
@@ -43,7 +44,11 @@ public class PaymentView {
             ViewHelper.showError("Could not load payments", e);
         }
 
-        TableView<Payment> table = new TableView<>(data);
+        FilteredList<Payment> filteredData = new FilteredList<>(data, p -> true);
+        SortedList<Payment> sortedData = new SortedList<>(filteredData);
+
+        TableView<Payment> table = new TableView<>(sortedData);
+        sortedData.comparatorProperty().bind(table.comparatorProperty());
         table.getStyleClass().add("data-table");
         table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         table.setMinHeight(280);
@@ -80,11 +85,23 @@ public class PaymentView {
         table.getColumns().add(amtCol);
         table.getColumns().add(dateCol);
 
+        TextField searchField = ViewHelper.field("🔍 Search payments by sale #, payment #...");
+        searchField.setPrefWidth(270);
+        searchField.textProperty().addListener((obs, oldVal, newVal) -> {
+            filteredData.setPredicate(p -> {
+                if (newVal == null || newVal.isBlank()) return true;
+                String lower = newVal.toLowerCase().trim();
+                return String.valueOf(p.getPaymentId()).contains(lower)
+                        || String.valueOf(p.getSaleId()).contains(lower)
+                        || (p.getPaymentDate() != null && p.getPaymentDate().toString().contains(lower));
+            });
+        });
+
         Button addBtn = new Button("+ Record Payment");
         addBtn.getStyleClass().add("btn-primary");
         Button deleteBtn = new Button("🗑 Delete");
         deleteBtn.getStyleClass().add("btn-danger");
-        FlowPane toolbar = new FlowPane(10, 10, addBtn, deleteBtn);
+        FlowPane toolbar = new FlowPane(10, 10, searchField, addBtn, deleteBtn);
         toolbar.setAlignment(Pos.CENTER_LEFT);
 
         addBtn.setOnAction(e -> showAddDialog().ifPresent(p -> {

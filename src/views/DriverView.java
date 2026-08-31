@@ -3,6 +3,8 @@ package views;
 import database.DriverDAO;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.collections.transformation.FilteredList;
+import javafx.collections.transformation.SortedList;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
@@ -34,7 +36,11 @@ public class DriverView {
             ViewHelper.showError("Could not load drivers", e);
         }
 
-        TableView<Driver> table = new TableView<>(data);
+        FilteredList<Driver> filteredData = new FilteredList<>(data, p -> true);
+        SortedList<Driver> sortedData = new SortedList<>(filteredData);
+
+        TableView<Driver> table = new TableView<>(sortedData);
+        sortedData.comparatorProperty().bind(table.comparatorProperty());
         table.getStyleClass().add("data-table");
         table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         table.setMinHeight(280);
@@ -82,11 +88,25 @@ public class DriverView {
         table.getColumns().add(phoneCol);
         table.getColumns().add(statusCol);
 
+        TextField searchField = ViewHelper.field("🔍 Search driver by name, CNIC, status...");
+        searchField.setPrefWidth(260);
+        searchField.textProperty().addListener((obs, oldVal, newVal) -> {
+            filteredData.setPredicate(d -> {
+                if (newVal == null || newVal.isBlank()) return true;
+                String lower = newVal.toLowerCase().trim();
+                return (d.getName() != null && d.getName().toLowerCase().contains(lower))
+                        || String.valueOf(d.getCnic()).contains(lower)
+                        || String.valueOf(d.getLicense()).contains(lower)
+                        || String.valueOf(d.getPhone()).contains(lower)
+                        || (d.getStatus() != null && d.getStatus().toLowerCase().contains(lower));
+            });
+        });
+
         Button addBtn = new Button("+ Add Driver");
         addBtn.getStyleClass().add("btn-primary");
         Button deleteBtn = new Button("🗑 Delete");
         deleteBtn.getStyleClass().add("btn-danger");
-        FlowPane toolbar = new FlowPane(10, 10, addBtn, deleteBtn);
+        FlowPane toolbar = new FlowPane(10, 10, searchField, addBtn, deleteBtn);
         toolbar.setAlignment(Pos.CENTER_LEFT);
 
         addBtn.setOnAction(e -> showAddDialog().ifPresent(d -> {

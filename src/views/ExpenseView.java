@@ -6,6 +6,7 @@ import database.VehicleDAO;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
+import javafx.collections.transformation.SortedList;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
@@ -45,7 +46,11 @@ public class ExpenseView {
             ViewHelper.showError("Could not load expenses", e);
         }
 
-        TableView<Expense> table = new TableView<>(data);
+        FilteredList<Expense> filteredData = new FilteredList<>(data, p -> true);
+        SortedList<Expense> sortedData = new SortedList<>(filteredData);
+
+        TableView<Expense> table = new TableView<>(sortedData);
+        sortedData.comparatorProperty().bind(table.comparatorProperty());
         table.getStyleClass().add("data-table");
         table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         table.setMinHeight(280);
@@ -97,11 +102,25 @@ public class ExpenseView {
         table.getColumns().add(amtCol);
         table.getColumns().add(dateCol);
 
+        TextField searchField = ViewHelper.field("🔍 Search expenses by category, payer, ID...");
+        searchField.setPrefWidth(270);
+        searchField.textProperty().addListener((obs, oldVal, newVal) -> {
+            filteredData.setPredicate(exp -> {
+                if (newVal == null || newVal.isBlank()) return true;
+                String lower = newVal.toLowerCase().trim();
+                return (exp.getType() != null && exp.getType().toLowerCase().contains(lower))
+                        || (exp.getPayer() != null && exp.getPayer().toLowerCase().contains(lower))
+                        || String.valueOf(exp.getExpenseId()).contains(lower)
+                        || String.valueOf(exp.getSaleId()).contains(lower)
+                        || String.valueOf(exp.getVehicleId()).contains(lower);
+            });
+        });
+
         Button addBtn = new Button("+ Add Expense");
         addBtn.getStyleClass().add("btn-primary");
         Button deleteBtn = new Button("🗑 Delete");
         deleteBtn.getStyleClass().add("btn-danger");
-        FlowPane toolbar = new FlowPane(10, 10, addBtn, deleteBtn);
+        FlowPane toolbar = new FlowPane(10, 10, searchField, addBtn, deleteBtn);
         toolbar.setAlignment(Pos.CENTER_LEFT);
 
         addBtn.setOnAction(e -> showAddDialog().ifPresent(exp -> {

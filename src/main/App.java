@@ -7,6 +7,8 @@ import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.Dialog;
 import javafx.scene.control.Label;
 import javafx.scene.control.Separator;
 import javafx.scene.control.ToggleButton;
@@ -38,10 +40,12 @@ public class App extends Application {
     private ToggleGroup desktopNavGroup;
     private ToggleGroup drawerNavGroup;
 
+    private Stage primaryStage;
     private String currentScreenName = "Dashboard";
 
     @Override
     public void start(Stage stage) {
+        this.primaryStage = stage;
         rootPane = new StackPane();
         mainLayout = new BorderPane();
         contentArea = new StackPane();
@@ -187,6 +191,14 @@ public class App extends Application {
         btnPayments.setOnAction(e -> navigateTo("Payments", PaymentView::getView));
         btnExpenses.setOnAction(e -> navigateTo("Expenses", ExpenseView::getView));
 
+        Button dbBtn = new Button("⚙ DB Tools");
+        dbBtn.getStyleClass().add("nav-button");
+        dbBtn.setMaxWidth(Double.MAX_VALUE);
+        dbBtn.setOnAction(e -> showDatabaseToolsDialog(primaryStage));
+
+        Region navSpacer = new Region();
+        VBox.setVgrow(navSpacer, Priority.ALWAYS);
+
         sidebar.getChildren().addAll(
                 headerBox,
                 new Separator(),
@@ -194,9 +206,80 @@ public class App extends Application {
                 new Separator(),
                 btnVehicles, btnCustomers, btnDrivers,
                 new Separator(),
-                btnSales, btnPayments, btnExpenses);
+                btnSales, btnPayments, btnExpenses,
+                navSpacer,
+                new Separator(),
+                dbBtn);
 
         return sidebar;
+    }
+
+    private void showDatabaseToolsDialog(Stage owner) {
+        Dialog<Void> dlg = new Dialog<>();
+        dlg.setTitle("Database Backup & Restore");
+        dlg.setHeaderText(null);
+        ViewHelper.styleDialog(dlg.getDialogPane());
+
+        VBox box = new VBox(14);
+        box.setPadding(new Insets(12));
+
+        Label info = new Label("Current Database Location:\n" + database.DBConfig.getDbPath());
+        info.getStyleClass().add("muted");
+        info.setWrapText(true);
+
+        Button backupBtn = new Button("💾 Backup / Export Database");
+        backupBtn.getStyleClass().add("btn-primary");
+        backupBtn.setMaxWidth(Double.MAX_VALUE);
+
+        Button restoreBtn = new Button("📥 Restore Database from File");
+        restoreBtn.getStyleClass().add("btn-secondary");
+        restoreBtn.setMaxWidth(Double.MAX_VALUE);
+
+        backupBtn.setOnAction(e -> {
+            javafx.stage.FileChooser fc = new javafx.stage.FileChooser();
+            fc.setTitle("Save Database Backup");
+            fc.setInitialFileName("rent-a-car-backup.db");
+            fc.getExtensionFilters().add(new javafx.stage.FileChooser.ExtensionFilter("SQLite Database (*.db)", "*.db"));
+            java.io.File dest = fc.showSaveDialog(owner);
+            if (dest != null) {
+                try {
+                    database.DBConfig.backupDatabase(dest);
+                    ViewHelper.showInfo("Database successfully backed up to:\n" + dest.getAbsolutePath());
+                } catch (Exception ex) {
+                    ViewHelper.showError("Backup failed", ex);
+                }
+            }
+        });
+
+        restoreBtn.setOnAction(e -> {
+            javafx.stage.FileChooser fc = new javafx.stage.FileChooser();
+            fc.setTitle("Select Database Backup to Restore");
+            fc.getExtensionFilters().add(new javafx.stage.FileChooser.ExtensionFilter("SQLite Database (*.db)", "*.db"));
+            java.io.File src = fc.showOpenDialog(owner);
+            if (src != null) {
+                try {
+                    database.DBConfig.restoreDatabase(src);
+                    ViewHelper.showInfo("Database successfully restored! Reloading current screen...");
+                    navigateTo(currentScreenName, () -> switch (currentScreenName) {
+                        case "Fleet" -> VehicleView.getView();
+                        case "Customers" -> CustomerView.getView();
+                        case "Drivers" -> DriverView.getView();
+                        case "Sales" -> SalesView.getView();
+                        case "Payments" -> PaymentView.getView();
+                        case "Expenses" -> ExpenseView.getView();
+                        default -> DashboardView.getView();
+                    });
+                    dlg.close();
+                } catch (Exception ex) {
+                    ViewHelper.showError("Restore failed", ex);
+                }
+            }
+        });
+
+        box.getChildren().addAll(info, new Separator(), backupBtn, restoreBtn);
+        dlg.getDialogPane().setContent(box);
+        dlg.getDialogPane().getButtonTypes().add(ButtonType.CLOSE);
+        dlg.showAndWait();
     }
 
     private void navigateTo(String screenName, Supplier<Node> viewSupplier) {

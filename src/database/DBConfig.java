@@ -10,7 +10,8 @@ import java.nio.file.Paths;
 
 public class DBConfig {
     private static final String DB_FILE_NAME = "rent-a-car.db";
-    private static final String URL = "jdbc:sqlite:" + resolveDbPath();
+    private static String dbPath;
+    private static final String URL = "jdbc:sqlite:" + getDbPath();
     private static volatile boolean initialized;
 
     public static Connection getConnection() throws SQLException {
@@ -164,5 +165,39 @@ public class DBConfig {
             appDataDir = Paths.get(".");
         }
         return appDataDir.resolve(DB_FILE_NAME).toAbsolutePath().normalize().toString();
+    }
+
+    public static String getDbPath() {
+        if (dbPath == null) {
+            dbPath = resolveDbPath();
+        }
+        return dbPath;
+    }
+
+    public static void backupDatabase(java.io.File targetFile) throws java.io.IOException {
+        Path src = Paths.get(getDbPath());
+        if (!Files.exists(src)) {
+            throw new java.io.FileNotFoundException("Database file does not exist at " + src);
+        }
+        if (targetFile.getParentFile() != null) {
+            targetFile.getParentFile().mkdirs();
+        }
+        Files.copy(src, targetFile.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+    }
+
+    public static void restoreDatabase(java.io.File sourceFile) throws java.io.IOException, java.sql.SQLException {
+        if (!sourceFile.exists()) {
+            throw new java.io.FileNotFoundException("Selected backup file does not exist");
+        }
+        Path dest = Paths.get(getDbPath());
+        if (dest.getParent() != null) {
+            Files.createDirectories(dest.getParent());
+        }
+        Files.copy(sourceFile.toPath(), dest, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+        // Verify database connection and schema
+        initialized = false;
+        try (Connection conn = getConnection()) {
+            ensureSchema(conn);
+        }
     }
 }

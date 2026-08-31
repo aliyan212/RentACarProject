@@ -19,8 +19,10 @@ import models.Driver;
 import models.Sale;
 import models.Vehicle;
 import java.sql.SQLException;
+import java.text.NumberFormat;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 import javafx.application.Platform;
 
@@ -176,10 +178,21 @@ public class SalesView {
 
         Button addBtn = new Button("+ New Rental");
         addBtn.getStyleClass().add("btn-primary");
+        Button receiptBtn = new Button("📄 View Receipt");
+        receiptBtn.getStyleClass().add("btn-secondary");
         Button deleteBtn = new Button("🗑 Delete");
         deleteBtn.getStyleClass().add("btn-danger");
-        FlowPane toolbar = new FlowPane(10, 10, addBtn, deleteBtn);
+        FlowPane toolbar = new FlowPane(10, 10, addBtn, receiptBtn, deleteBtn);
         toolbar.setAlignment(Pos.CENTER_LEFT);
+
+        receiptBtn.setOnAction(e -> {
+            Sale sel = table.getSelectionModel().getSelectedItem();
+            if (sel == null) {
+                ViewHelper.showWarning("Select a rental row first.");
+                return;
+            }
+            showReceiptDialog(sel);
+        });
 
         ComboBox<String> statusFilter = new ComboBox<>(FXCollections.observableArrayList(
                 "All", "Paid", "Partial", "Unpaid", "Overdue"));
@@ -494,5 +507,77 @@ public class SalesView {
             }
         });
         return dlg.showAndWait();
+    }
+
+    private static void showReceiptDialog(Sale s) {
+        Dialog<Void> dlg = new Dialog<>();
+        dlg.setTitle("Rental Invoice #" + s.getSaleId());
+        dlg.setHeaderText(null);
+        ViewHelper.styleDialog(dlg.getDialogPane());
+
+        VBox box = new VBox(14);
+        box.setPadding(new Insets(10));
+
+        NumberFormat fmt = NumberFormat.getNumberInstance(Locale.US);
+
+        Label invoiceTitle = new Label("Rental Agreement & Invoice");
+        invoiceTitle.setStyle("-fx-font-size: 16px; -fx-font-weight: 800; -fx-text-fill: #ffffff;");
+
+        GridPane grid = new GridPane();
+        grid.setHgap(14);
+        grid.setVgap(8);
+
+        String[][] details = {
+                { "Agreement ID", "#" + s.getSaleId() },
+                { "Customer CNIC", String.valueOf(s.getCustomerCnic()) },
+                { "Vehicle ID", String.valueOf(s.getCarId()) },
+                { "Driver", s.getDriverCnic() == 0 ? "Self-drive" : "CNIC " + s.getDriverCnic() },
+                { "Rental Period", s.getStartDate() + " to " + s.getEndDate() },
+                { "Rental Type", s.getRentalType() },
+                { "Total Amount", "PKR " + fmt.format(s.getTotalAmount()) },
+                { "Advance Paid", "PKR " + fmt.format(s.getAmountPaid()) },
+                { "Balance Due", "PKR " + fmt.format(s.getBalance()) },
+                { "Payment Status", s.getPaymentStatus() + (s.isOverdue() ? " (Overdue)" : "") }
+        };
+
+        for (int i = 0; i < details.length; i++) {
+            Label lblKey = new Label(details[i][0] + ":");
+            lblKey.setStyle("-fx-font-weight: 700; -fx-text-fill: #8c9eff;");
+            Label lblVal = new Label(details[i][1]);
+            lblVal.setStyle("-fx-text-fill: #e8eaed;");
+            grid.add(lblKey, 0, i);
+            grid.add(lblVal, 1, i);
+        }
+
+        Button copyBtn = new Button("📋 Copy Invoice Summary");
+        copyBtn.getStyleClass().add("btn-primary");
+        copyBtn.setOnAction(e -> {
+            StringBuilder sb = new StringBuilder();
+            sb.append("═══════════════════════════════════\n");
+            sb.append("   ALIEON'S RENT-A-CAR INVOICE     \n");
+            sb.append("═══════════════════════════════════\n");
+            sb.append("Rental ID:       #").append(s.getSaleId()).append("\n");
+            sb.append("Customer CNIC:   ").append(s.getCustomerCnic()).append("\n");
+            sb.append("Vehicle ID:      ").append(s.getCarId()).append("\n");
+            sb.append("Driver:          ").append(s.getDriverCnic() == 0 ? "Self-drive" : s.getDriverCnic()).append("\n");
+            sb.append("Duration:        ").append(s.getStartDate()).append(" to ").append(s.getEndDate()).append("\n");
+            sb.append("Rental Type:     ").append(s.getRentalType()).append("\n");
+            sb.append("───────────────────────────────────\n");
+            sb.append("Total Bill:      PKR ").append(fmt.format(s.getTotalAmount())).append("\n");
+            sb.append("Advance Paid:    PKR ").append(fmt.format(s.getAmountPaid())).append("\n");
+            sb.append("Balance Due:     PKR ").append(fmt.format(s.getBalance())).append("\n");
+            sb.append("Status:          ").append(s.getPaymentStatus()).append(s.isOverdue() ? " (Overdue)" : "").append("\n");
+            sb.append("═══════════════════════════════════\n");
+
+            javafx.scene.input.ClipboardContent cc = new javafx.scene.input.ClipboardContent();
+            cc.putString(sb.toString());
+            javafx.scene.input.Clipboard.getSystemClipboard().setContent(cc);
+            copyBtn.setText("✓ Copied to Clipboard!");
+        });
+
+        box.getChildren().addAll(invoiceTitle, new Separator(), grid, new Separator(), copyBtn);
+        dlg.getDialogPane().setContent(ViewHelper.createResponsiveScroll(box));
+        dlg.getDialogPane().getButtonTypes().add(ButtonType.CLOSE);
+        dlg.showAndWait();
     }
 }

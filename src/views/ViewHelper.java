@@ -111,10 +111,23 @@ public class ViewHelper {
     }
 
     public static void showError(String msg, SQLException e) {
+        showError(msg, (Exception) e);
+    }
+
+    public static void showError(String msg, Exception e) {
         Alert a = new Alert(Alert.AlertType.ERROR);
-        a.setTitle("Database Error");
+        a.setTitle("Error");
         a.setHeaderText(msg);
-        a.setContentText(e.getMessage());
+        a.setContentText(e != null ? e.getMessage() : "An unexpected error occurred.");
+        styleDialog(a.getDialogPane());
+        a.show();
+    }
+
+    public static void showInfo(String msg) {
+        Alert a = new Alert(Alert.AlertType.INFORMATION);
+        a.setTitle("Information");
+        a.setHeaderText(null);
+        a.setContentText(msg);
         styleDialog(a.getDialogPane());
         a.show();
     }

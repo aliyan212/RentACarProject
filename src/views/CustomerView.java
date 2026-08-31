@@ -3,6 +3,8 @@ package views;
 import database.CustomerDAO;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.collections.transformation.FilteredList;
+import javafx.collections.transformation.SortedList;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
@@ -35,7 +37,11 @@ public class CustomerView {
             ViewHelper.showError("Could not load customers", e);
         }
 
-        TableView<Customer> table = new TableView<>(data);
+        FilteredList<Customer> filteredData = new FilteredList<>(data, p -> true);
+        SortedList<Customer> sortedData = new SortedList<>(filteredData);
+
+        TableView<Customer> table = new TableView<>(sortedData);
+        sortedData.comparatorProperty().bind(table.comparatorProperty());
         table.getStyleClass().add("data-table");
         table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         table.setMinHeight(280);
@@ -67,11 +73,25 @@ public class CustomerView {
         table.getColumns().add(addressCol);
         table.getColumns().add(licenseCol);
 
+        TextField searchField = ViewHelper.field("🔍 Search customer by name, CNIC, phone...");
+        searchField.setPrefWidth(260);
+        searchField.textProperty().addListener((obs, oldVal, newVal) -> {
+            filteredData.setPredicate(c -> {
+                if (newVal == null || newVal.isBlank()) return true;
+                String lower = newVal.toLowerCase().trim();
+                return (c.getName() != null && c.getName().toLowerCase().contains(lower))
+                        || String.valueOf(c.getCnic()).contains(lower)
+                        || String.valueOf(c.getPhone()).contains(lower)
+                        || (c.getAddress() != null && c.getAddress().toLowerCase().contains(lower))
+                        || (c.getLicense() != null && c.getLicense().toLowerCase().contains(lower));
+            });
+        });
+
         Button addBtn = new Button("+ Add Customer");
         addBtn.getStyleClass().add("btn-primary");
         Button deleteBtn = new Button("🗑 Delete");
         deleteBtn.getStyleClass().add("btn-danger");
-        FlowPane toolbar = new FlowPane(10, 10, addBtn, deleteBtn);
+        FlowPane toolbar = new FlowPane(10, 10, searchField, addBtn, deleteBtn);
         toolbar.setAlignment(Pos.CENTER_LEFT);
 
         addBtn.setOnAction(e -> showAddDialog().ifPresent(c -> {
