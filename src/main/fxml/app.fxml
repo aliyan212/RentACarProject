@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.ToggleButton?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.VBox?>
+
+<BorderPane xmlns="http://javafx.com/javafx/17"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="main.AppController"
+            styleClass="root"
+            stylesheets="@../../resources/style.css">
+
+    <left>
+        <VBox fx:id="sidebar" styleClass="sidebar" spacing="6">
+            <children>
+                <Label text="Alieon's Rent-a-Car" styleClass="sidebar-title"/>
+                <Separator/>
+                <ToggleButton fx:id="btnDash" text="Dashboard" styleClass="nav-button" maxWidth="Infinity"/>
+                <Separator/>
+                <ToggleButton fx:id="btnVehicles" text="Fleet" styleClass="nav-button" maxWidth="Infinity"/>
+                <ToggleButton fx:id="btnCustomers" text="Customers" styleClass="nav-button" maxWidth="Infinity"/>
+                <ToggleButton fx:id="btnDrivers" text="Drivers" styleClass="nav-button" maxWidth="Infinity"/>
+                <Separator/>
+                <ToggleButton fx:id="btnSales" text="Sales" styleClass="nav-button" maxWidth="Infinity"/>
+                <ToggleButton fx:id="btnPayments" text="Payments" styleClass="nav-button" maxWidth="Infinity"/>
+                <ToggleButton fx:id="btnExpenses" text="Expenses" styleClass="nav-button" maxWidth="Infinity"/>
+            </children>
+        </VBox>
+    </left>
+
+    <center>
+        <VBox fx:id="contentArea" styleClass="content"/>
+    </center>
+
+</BorderPane>

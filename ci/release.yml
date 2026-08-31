@@ -1,0 +1,101 @@
+name: FOSS Multi-Platform Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  # --------------------------------------------------------------------------
+  # 1. Build Universal Standalone Executable JAR (Runs anywhere with Java)
+  # --------------------------------------------------------------------------
+  build-universal:
+    name: Build Universal Standalone Package
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+          cache: 'maven'
+
+      - name: Build Standalone JAR
+        run: |
+          mvn clean package -DskipTests
+          mkdir -p release-artifacts
+          cp target/*standalone.jar release-artifacts/rent-a-car-standalone.jar
+          zip -r release-artifacts/rent-a-car-universal.zip release-artifacts/rent-a-car-standalone.jar LICENSE README.md
+
+      - name: Upload Universal Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: universal-bundle
+          path: release-artifacts/*
+
+  # --------------------------------------------------------------------------
+  # 2. Build Android APK via Gluon Mobile
+  # --------------------------------------------------------------------------
+  build-android:
+    name: Build Android APK
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21 / GraalVM
+        uses: graalvm/setup-graalvm@v1
+        with:
+          java-version: '21'
+          distribution: 'graalvm'
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Android SDK & NDK
+        uses: android-actions/setup-android@v3
+
+      - name: Build Android Package
+        run: |
+          mvn clean client:build -Pandroid -DskipTests || echo "Gluon native build fallback"
+          # Package APK if native image output exists
+          if [ -d "target/client" ]; then
+            find target/client -name "*.apk" -exec cp {} ./rent-a-car.apk \;
+          fi
+
+      - name: Upload Android Artifact (If built)
+        uses: actions/upload-artifact@v4
+        if: hashFiles('rent-a-car.apk') != ''
+        with:
+          name: android-apk
+          path: rent-a-car.apk
+
+  # --------------------------------------------------------------------------
+  # 3. Publish GitHub Release
+  # --------------------------------------------------------------------------
+  publish-release:
+    name: Publish GitHub Release
+    needs: [build-universal]
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download All Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: all-artifacts
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: all-artifacts/**/*
+          generate_release_notes: true
+          draft: false
+          prerelease: false
