@@ -22,9 +22,13 @@ else
     JAR_BIN="jar"
 fi
 
-# 1. Compile project with Maven
+# 1. Compile project with Maven and collect dependencies
 echo "[1/4] Compiling project..."
-mvn clean compile
+if [ -x "./mvnw" ]; then
+    ./mvnw clean compile dependency:copy-dependencies -DoutputDirectory=target/lib -DincludeScope=runtime
+else
+    mvn clean compile dependency:copy-dependencies -DoutputDirectory=target/lib -DincludeScope=runtime
+fi
 
 # 2. Assemble standalone fat JAR
 echo "[2/4] Assembling standalone executable JAR with bundled dependencies..."
@@ -34,12 +38,23 @@ mkdir -p "${STAGE_DIR}" "${DIST_DIR}"
 # Copy application classes & resources
 cp -R target/classes/* "${STAGE_DIR}/"
 
-# Extract dependency libraries into stage directory
-for libjar in lib/*.jar; do
-    if [ -f "$libjar" ]; then
-        (cd "${STAGE_DIR}" && "${JAR_BIN}" -xf "../.${libjar}" 2>/dev/null || true)
-    fi
-done
+# Extract dependencies from target/lib into stage directory
+if [ -d "target/lib" ]; then
+    for libjar in target/lib/*.jar; do
+        if [ -f "$libjar" ]; then
+            (cd "${STAGE_DIR}" && "${JAR_BIN}" -xf "../.${libjar}" 2>/dev/null || true)
+        fi
+    done
+fi
+
+# Also extract from local lib/*.jar if present
+if [ -d "lib" ]; then
+    for libjar in lib/*.jar; do
+        if [ -f "$libjar" ]; then
+            (cd "${STAGE_DIR}" && "${JAR_BIN}" -xf "../.${libjar}" 2>/dev/null || true)
+        fi
+    done
+fi
 
 # Remove signatures to avoid SecurityException in fat JARs
 rm -rf "${STAGE_DIR}/META-INF"/*.SF "${STAGE_DIR}/META-INF"/*.DSA "${STAGE_DIR}/META-INF"/*.RSA
@@ -62,14 +77,16 @@ echo "  -> Created: ${DIST_DIR}/rent-a-car-${VERSION}-standalone.jar"
 # Copy FOSS metadata
 cp LICENSE "${DIST_DIR}/LICENSE.txt"
 cp README.md "${DIST_DIR}/README.md"
-cp -R lib "${DIST_DIR}/lib"
+if [ -d "lib" ]; then
+    cp -R lib "${DIST_DIR}/lib"
+fi
 
 # 3. Create cross-platform ZIP and Tarball bundles
 echo "[3/4] Packaging portable distribution archives..."
 (
     cd "${DIST_DIR}"
-    zip -r "rent-a-car-${VERSION}-universal.zip" "rent-a-car.jar" "LICENSE.txt" "README.md" "lib" > /dev/null
-    tar -czf "rent-a-car-${VERSION}-universal.tar.gz" "rent-a-car.jar" "LICENSE.txt" "README.md" "lib" > /dev/null
+    zip -r "rent-a-car-${VERSION}-universal.zip" "rent-a-car.jar" "LICENSE.txt" "README.md" > /dev/null
+    tar -czf "rent-a-car-${VERSION}-universal.tar.gz" "rent-a-car.jar" "LICENSE.txt" "README.md" > /dev/null
 )
 
 # 4. Completion summary
