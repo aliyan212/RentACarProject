@@ -1,4 +1,4 @@
-name: FOSS Multi-Platform Release
+name: Multi-Platform & Android Release
 
 on:
   push:
@@ -11,7 +11,7 @@ permissions:
 
 jobs:
   # --------------------------------------------------------------------------
-  # 1. Build Universal Standalone Executable JAR (Runs anywhere with Java)
+  # 1. Build Universal Standalone Packages (Runs anywhere with Java)
   # --------------------------------------------------------------------------
   build-universal:
     name: Build Universal Standalone Package
@@ -27,21 +27,23 @@ jobs:
           java-version: '21'
           cache: 'maven'
 
-      - name: Build Standalone JAR
+      - name: Build Standalone Packages via build-release.sh
         run: |
-          mvn clean package -DskipTests
+          chmod +x build-release.sh ./mvnw
+          bash build-release.sh
           mkdir -p release-artifacts
-          cp target/*standalone.jar release-artifacts/rent-a-car-standalone.jar
-          zip -r release-artifacts/rent-a-car-universal.zip release-artifacts/rent-a-car-standalone.jar LICENSE README.md
+          cp dist/*.jar release-artifacts/
+          cp dist/*.zip release-artifacts/
+          cp dist/*.tar.gz release-artifacts/
 
-      - name: Upload Universal Artifact
+      - name: Upload Universal Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: universal-bundle
           path: release-artifacts/*
 
   # --------------------------------------------------------------------------
-  # 2. Build Android APK via Gluon Mobile
+  # 2. Build Android Native APK via GluonFX & GraalVM
   # --------------------------------------------------------------------------
   build-android:
     name: Build Android APK
@@ -50,39 +52,40 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Set up JDK 21 / GraalVM
-        uses: graalvm/setup-graalvm@v1
+      - name: Setup Gluon GraalVM
+        uses: gluonhq/setup-graalvm@master
         with:
-          java-version: '21'
-          distribution: 'graalvm'
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          graalvm: '22.1.0.1-Final'
+          jdk: 'java17'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Setup Android SDK & NDK
+      - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
-      - name: Build Android Package
+      - name: Build Android Native Image & APK
         run: |
-          mvn clean gluonfx:build -Pandroid -DskipTests || echo "Gluon native build fallback"
-          # Package APK if native image output exists
-          if [ -d "target/gluonfx" ]; then
-            find target/gluonfx -name "*.apk" -exec cp {} ./rent-a-car.apk \;
-          fi
+          chmod +x ./mvnw
+          ./mvnw clean gluonfx:build -Pandroid -DskipTests
+          ./mvnw gluonfx:package -Pandroid -DskipTests
+          mkdir -p android-artifacts
+          find target/gluonfx -name "*.apk" -exec cp {} android-artifacts/rent-a-car.apk \; || true
 
-      - name: Upload Android Artifact (If built)
+      - name: Upload Android APK
         uses: actions/upload-artifact@v4
-        if: hashFiles('rent-a-car.apk') != ''
+        if: always()
         with:
           name: android-apk
-          path: rent-a-car.apk
+          path: android-artifacts/*.apk
 
   # --------------------------------------------------------------------------
-  # 3. Publish GitHub Release
+  # 3. Publish to GitHub Release
   # --------------------------------------------------------------------------
   publish-release:
     name: Publish GitHub Release
-    needs: [build-universal]
+    needs: [build-universal, build-android]
     runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'refs/tags/')
+    if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -92,10 +95,18 @@ jobs:
         with:
           path: all-artifacts
 
-      - name: Create GitHub Release
+      - name: Flatten Artifacts Directory
+        run: |
+          mkdir -p release-files
+          find all-artifacts -type f -exec cp {} release-files/ \; || true
+          ls -lh release-files/
+
+      - name: Create or Update GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          files: all-artifacts/**/*
+          files: release-files/*
+          tag_name: ${{ github.ref_name || 'v1.0.1' }}
+          name: Release ${{ github.ref_name || 'v1.0.1' }}
           generate_release_notes: true
           draft: false
           prerelease: false

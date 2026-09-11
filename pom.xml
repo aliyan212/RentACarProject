@@ -17,7 +17,8 @@
         <maven.compiler.target>21</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <javafx.version>17.0.14</javafx.version>
-        <client.plugin.version>0.1.44</client.plugin.version>
+        <gluonfx.plugin.version>1.0.22</gluonfx.plugin.version>
+        <gluonfx.target>host</gluonfx.target>
         <attach.version>4.0.19</attach.version>
     </properties>
 
@@ -96,21 +97,21 @@
                 <version>0.0.8</version>
                 <configuration>
                     <mainClass>main.App</mainClass>
-                    <bundles>all</bundles>
-                    <runArgs>
-                        <arg>--enable-native-access=javafx.graphics</arg>
-                        <arg>-Dprism.order=sw</arg>
-                        <arg>-Dprism.verbose=true</arg>
-                    </runArgs>
+                    <options>
+                        <option>--enable-native-access=javafx.graphics</option>
+                        <option>-Dprism.order=sw</option>
+                        <option>-Dprism.verbose=true</option>
+                    </options>
                 </configuration>
             </plugin>
 
-            <!-- Gluon Client Plugin for native Android & Mobile compilation -->
+            <!-- GluonFX Plugin for native Android & Mobile compilation -->
             <plugin>
                 <groupId>com.gluonhq</groupId>
-                <artifactId>client-maven-plugin</artifactId>
-                <version>${client.plugin.version}</version>
+                <artifactId>gluonfx-maven-plugin</artifactId>
+                <version>${gluonfx.plugin.version}</version>
                 <configuration>
+                    <target>${gluonfx.target}</target>
                     <mainClass>main.App</mainClass>
                     <attachList>
                         <list>storage</list>
@@ -124,8 +125,9 @@
                         <packageType>apk</packageType>
                         <versionCode>1</versionCode>
                         <versionName>1.0.0</versionName>
-                        <appId>com.alieon.rentacar</appId>
-                        <appName>Rent-A-Car</appName>
+                        <appLabel>Rent-A-Car</appLabel>
+                        <vendor>Alieon</vendor>
+                        <description>Rent-a-Car Management System</description>
                     </releaseConfiguration>
                 </configuration>
             </plugin>
@@ -136,7 +138,7 @@
         <profile>
             <id>android</id>
             <properties>
-                <client.target>android</client.target>
+                <gluonfx.target>android</gluonfx.target>
             </properties>
         </profile>
         <profile>
@@ -145,7 +147,7 @@
                 <activeByDefault>true</activeByDefault>
             </activation>
             <properties>
-                <client.target>host</client.target>
+                <gluonfx.target>host</gluonfx.target>
             </properties>
         </profile>
     </profiles>

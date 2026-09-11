@@ -77,7 +77,8 @@ public class CustomerView {
         searchField.setPrefWidth(260);
         searchField.textProperty().addListener((obs, oldVal, newVal) -> {
             filteredData.setPredicate(c -> {
-                if (newVal == null || newVal.isBlank()) return true;
+                if (newVal == null || newVal.isBlank())
+                    return true;
                 String lower = newVal.toLowerCase().trim();
                 return (c.getName() != null && c.getName().toLowerCase().contains(lower))
                         || String.valueOf(c.getCnic()).contains(lower)

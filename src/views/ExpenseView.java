@@ -106,7 +106,8 @@ public class ExpenseView {
         searchField.setPrefWidth(270);
         searchField.textProperty().addListener((obs, oldVal, newVal) -> {
             filteredData.setPredicate(exp -> {
-                if (newVal == null || newVal.isBlank()) return true;
+                if (newVal == null || newVal.isBlank())
+                    return true;
                 String lower = newVal.toLowerCase().trim();
                 return (exp.getType() != null && exp.getType().toLowerCase().contains(lower))
                         || (exp.getPayer() != null && exp.getPayer().toLowerCase().contains(lower))

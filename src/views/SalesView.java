@@ -559,14 +559,16 @@ public class SalesView {
             sb.append("Rental ID:       #").append(s.getSaleId()).append("\n");
             sb.append("Customer CNIC:   ").append(s.getCustomerCnic()).append("\n");
             sb.append("Vehicle ID:      ").append(s.getCarId()).append("\n");
-            sb.append("Driver:          ").append(s.getDriverCnic() == 0 ? "Self-drive" : s.getDriverCnic()).append("\n");
+            sb.append("Driver:          ").append(s.getDriverCnic() == 0 ? "Self-drive" : s.getDriverCnic())
+                    .append("\n");
             sb.append("Duration:        ").append(s.getStartDate()).append(" to ").append(s.getEndDate()).append("\n");
             sb.append("Rental Type:     ").append(s.getRentalType()).append("\n");
             sb.append("───────────────────────────────────\n");
             sb.append("Total Bill:      PKR ").append(fmt.format(s.getTotalAmount())).append("\n");
             sb.append("Advance Paid:    PKR ").append(fmt.format(s.getAmountPaid())).append("\n");
             sb.append("Balance Due:     PKR ").append(fmt.format(s.getBalance())).append("\n");
-            sb.append("Status:          ").append(s.getPaymentStatus()).append(s.isOverdue() ? " (Overdue)" : "").append("\n");
+            sb.append("Status:          ").append(s.getPaymentStatus()).append(s.isOverdue() ? " (Overdue)" : "")
+                    .append("\n");
             sb.append("═══════════════════════════════════\n");
 
             javafx.scene.input.ClipboardContent cc = new javafx.scene.input.ClipboardContent();

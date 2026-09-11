@@ -89,7 +89,8 @@ public class PaymentView {
         searchField.setPrefWidth(270);
         searchField.textProperty().addListener((obs, oldVal, newVal) -> {
             filteredData.setPredicate(p -> {
-                if (newVal == null || newVal.isBlank()) return true;
+                if (newVal == null || newVal.isBlank())
+                    return true;
                 String lower = newVal.toLowerCase().trim();
                 return String.valueOf(p.getPaymentId()).contains(lower)
                         || String.valueOf(p.getSaleId()).contains(lower)

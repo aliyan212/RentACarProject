@@ -92,7 +92,8 @@ public class DriverView {
         searchField.setPrefWidth(260);
         searchField.textProperty().addListener((obs, oldVal, newVal) -> {
             filteredData.setPredicate(d -> {
-                if (newVal == null || newVal.isBlank()) return true;
+                if (newVal == null || newVal.isBlank())
+                    return true;
                 String lower = newVal.toLowerCase().trim();
                 return (d.getName() != null && d.getName().toLowerCase().contains(lower))
                         || String.valueOf(d.getCnic()).contains(lower)

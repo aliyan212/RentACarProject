@@ -78,7 +78,8 @@ public class VehicleView {
         searchField.setPrefWidth(240);
         searchField.textProperty().addListener((obs, oldVal, newVal) -> {
             filteredData.setPredicate(v -> {
-                if (newVal == null || newVal.isBlank()) return true;
+                if (newVal == null || newVal.isBlank())
+                    return true;
                 String lower = newVal.toLowerCase().trim();
                 return String.valueOf(v.getCarId()).contains(lower)
                         || (v.getModel() != null && v.getModel().toLowerCase().contains(lower))

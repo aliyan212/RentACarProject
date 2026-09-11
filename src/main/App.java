@@ -239,7 +239,8 @@ public class App extends Application {
             javafx.stage.FileChooser fc = new javafx.stage.FileChooser();
             fc.setTitle("Save Database Backup");
             fc.setInitialFileName("rent-a-car-backup.db");
-            fc.getExtensionFilters().add(new javafx.stage.FileChooser.ExtensionFilter("SQLite Database (*.db)", "*.db"));
+            fc.getExtensionFilters()
+                    .add(new javafx.stage.FileChooser.ExtensionFilter("SQLite Database (*.db)", "*.db"));
             java.io.File dest = fc.showSaveDialog(owner);
             if (dest != null) {
                 try {
@@ -254,7 +255,8 @@ public class App extends Application {
         restoreBtn.setOnAction(e -> {
             javafx.stage.FileChooser fc = new javafx.stage.FileChooser();
             fc.setTitle("Select Database Backup to Restore");
-            fc.getExtensionFilters().add(new javafx.stage.FileChooser.ExtensionFilter("SQLite Database (*.db)", "*.db"));
+            fc.getExtensionFilters()
+                    .add(new javafx.stage.FileChooser.ExtensionFilter("SQLite Database (*.db)", "*.db"));
             java.io.File src = fc.showOpenDialog(owner);
             if (src != null) {
                 try {
