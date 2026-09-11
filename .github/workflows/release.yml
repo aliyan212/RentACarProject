@@ -56,7 +56,7 @@ jobs:
         uses: gluonhq/setup-graalvm@master
         with:
           graalvm: 'latest'
-          jdk: 'java21'
+          jdk: 'java23'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
