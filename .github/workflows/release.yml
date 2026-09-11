@@ -64,10 +64,12 @@ jobs:
         uses: android-actions/setup-android@v3
 
       - name: Build Android Native Image & APK
+        env:
+          MAVEN_OPTS: "-Djdk.internal.platform.useFallback=true -XX:-UseContainerSupport"
         run: |
           chmod +x ./mvnw
-          ./mvnw clean gluonfx:build -Pandroid -DskipTests
-          ./mvnw gluonfx:package -Pandroid -DskipTests
+          ./mvnw clean gluonfx:build -Pandroid -DskipTests -Djdk.internal.platform.useFallback=true
+          ./mvnw gluonfx:package -Pandroid -DskipTests -Djdk.internal.platform.useFallback=true
           mkdir -p android-artifacts
           find target/gluonfx -name "*.apk" -exec cp {} android-artifacts/rent-a-car.apk \; || true
 
