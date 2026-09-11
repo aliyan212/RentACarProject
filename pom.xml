@@ -17,7 +17,7 @@
         <maven.compiler.target>21</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <javafx.version>21.0.2</javafx.version>
-        <gluonfx.plugin.version>1.0.22</gluonfx.plugin.version>
+        <gluonfx.plugin.version>1.0.29</gluonfx.plugin.version>
         <gluonfx.target>host</gluonfx.target>
         <attach.version>4.0.19</attach.version>
     </properties>
