@@ -65,8 +65,6 @@ jobs:
 
       - name: Build Android Native Image & APK
         env:
-          _JAVA_OPTIONS: "-XX:-UseContainerSupport -Djdk.internal.platform.useFallback=true"
-          JDK_JAVA_OPTIONS: "-XX:-UseContainerSupport -Djdk.internal.platform.useFallback=true"
           MAVEN_OPTS: "-XX:-UseContainerSupport -Djdk.internal.platform.useFallback=true"
         run: |
           chmod +x ./mvnw
