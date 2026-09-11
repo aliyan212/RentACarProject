@@ -13,11 +13,11 @@
     <description>Alieon's Rent-a-Car Management System</description>
 
     <properties>
-        <maven.compiler.source>17</maven.compiler.source>
-        <maven.compiler.target>17</maven.compiler.target>
+        <maven.compiler.source>21</maven.compiler.source>
+        <maven.compiler.target>21</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <javafx.version>17.0.14</javafx.version>
-        <gluonfx.plugin.version>1.0.15</gluonfx.plugin.version>
+        <javafx.version>21.0.2</javafx.version>
+        <gluonfx.plugin.version>1.0.22</gluonfx.plugin.version>
         <gluonfx.target>host</gluonfx.target>
         <attach.version>4.0.19</attach.version>
     </properties>
@@ -85,7 +85,7 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.13.0</version>
                 <configuration>
-                    <release>17</release>
+                    <release>21</release>
                 </configuration>
             </plugin>
 
