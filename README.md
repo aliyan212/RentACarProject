@@ -48,48 +48,6 @@ This produces:
 
 ---
 
-## Android Build & Deployment
-
-The application is configured with the modern **GluonFX Maven Plugin** (`gluonfx-maven-plugin`) and Gluon Attach services for native Ahead-Of-Time (AOT) mobile compilation.
-
-### Prerequisites:
-1. **GraalVM** with Native Image enabled (Java 17 or 21).
-2. **Android SDK** (API Level 21+) and **Android NDK** (version 25b+).
-3. Set environment variables:
-   ```bash
-   export ANDROID_SDK_ROOT=/path/to/android-sdk
-   export ANDROID_NDK_HOME=/path/to/android-ndk
-   export GRAALVM_HOME=/path/to/graalvm
-   ```
-
-### 1. Compile & Package Android APK:
-> **Note**: Use the bundled `./mvnw` wrapper, which ensures the required Maven 3.8.8 runtime expected by GluonFX.
-```bash
-./mvnw clean gluonfx:build -Pandroid
-./mvnw gluonfx:package -Pandroid
-```
-The generated `.apk` will be output in `target/gluonfx/aarch64-android/gvm/Rent-A-Car.apk`.
-
-### 2. Install & Run on Connected Android Device / Emulator:
-```bash
-# Connect device via USB with USB Debugging enabled (verify with `adb devices`), then run:
-./mvnw gluonfx:run -Pandroid
-```
-Or manually install the APK via `adb`:
-```bash
-adb install target/gluonfx/aarch64-android/gvm/Rent-A-Car.apk
-```
-
----
-
-## Storage & Database Details
-
-- **Desktop Storage**: `~/.rent-a-car/rent-a-car.db`
-- **Android Storage**: Sandboxed private storage (`/data/data/com.alieon.rentacar/files/rent-a-car.db`) resolved automatically via Gluon `StorageService`.
-- **Custom Storage Path Override**: Set `RENTACAR_DB_PATH` or `RENTACAR_DB_DIR` environment variables.
-
----
-
 ## Contributing & FOSS License
 
 Contributions are welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for contribution guidelines.
