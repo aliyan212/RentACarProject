@@ -160,6 +160,7 @@ public class ExpenseView {
         Dialog<Expense> dlg = new Dialog<>();
         dlg.setTitle("Add Expense");
         dlg.setHeaderText(null);
+        ViewHelper.styleDialog(dlg.getDialogPane());
 
         List<Sale> saleList = List.of();
         try {

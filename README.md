@@ -1,13 +1,18 @@
-# Rent-A-Car Management System
+<div align="center">
+  <img src="src/resources/icon.png" width="120" height="120" alt="Roam Logo" style="border-radius: 26px;" />
+  <h1>Roam</h1>
+  <p><strong>Next-Generation Fleet &amp; Car Rental Management System</strong></p>
+  <p><em>Drive on your terms. Manage easily.</em></p>
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Java](https://img.shields.io/badge/Java-21-blue.svg)](https://openjdk.org/)
-[![JavaFX](https://img.shields.io/badge/JavaFX-17-orange.svg)](https://openjfx.io/)
-[![Platform](https://img.shields.io/badge/Platform-macOS%20%7C%20Windows%20%7C%20Linux%20%7C%20Android-green.svg)](#)
-
-A Free and Open Source (FOSS), cross-platform, responsive fleet and rental management system built with JavaFX, embedded SQLite, and Gluon Mobile.
+  [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+  [![Java](https://img.shields.io/badge/Java-21-blue.svg)](https://openjdk.org/)
+  [![JavaFX](https://img.shields.io/badge/JavaFX-21-orange.svg)](https://openjfx.io/)
+  [![Platform](https://img.shields.io/badge/Platform-macOS%20%7C%20Windows%20%7C%20Linux%20%7C%20Android-green.svg)](#)
+</div>
 
 ---
+
+**Roam** is a Free and Open Source (FOSS), cross-platform, responsive fleet and rental management system built with JavaFX, embedded SQLite, and Gluon Mobile. Designed with a sleek obsidian dark theme, Roam gives independent operators and rental businesses a unified command center for fleet operations, customer bookings, driver assignments, and financial tracking.
 
 ## Key Features
 

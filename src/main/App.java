@@ -13,11 +13,14 @@ import javafx.scene.control.Label;
 import javafx.scene.control.Separator;
 import javafx.scene.control.ToggleButton;
 import javafx.scene.control.ToggleGroup;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 import views.*;
 
+import java.io.InputStream;
 import java.util.function.Supplier;
 
 public class App extends Application {
@@ -42,6 +45,36 @@ public class App extends Application {
 
     private Stage primaryStage;
     private String currentScreenName = "Dashboard";
+
+    private Image loadAppIcon(int size) {
+        try {
+            String path = size <= 32 ? "/resources/icon-32.png" : (size <= 64 ? "/resources/icon-64.png" : "/resources/icon.png");
+            InputStream is = getClass().getResourceAsStream(path);
+            if (is == null) {
+                is = getClass().getResourceAsStream(path.replace("/resources", ""));
+            }
+            if (is != null) {
+                return new Image(is);
+            }
+        } catch (Exception ignored) {
+        }
+        return null;
+    }
+
+    private Image loadBrandLogo(int size) {
+        try {
+            String path = "/resources/icon-mark-" + (size <= 32 ? "32" : (size <= 64 ? "64" : "128")) + ".png";
+            InputStream is = getClass().getResourceAsStream(path);
+            if (is == null) {
+                is = getClass().getResourceAsStream(path.replace("/resources", ""));
+            }
+            if (is != null) {
+                return new Image(is);
+            }
+        } catch (Exception ignored) {
+        }
+        return loadAppIcon(size);
+    }
 
     @Override
     public void start(Stage stage) {
@@ -82,7 +115,15 @@ public class App extends Application {
         // ── 5. Start on Dashboard ─────────────────────────────────────────────
         navigateTo("Dashboard", DashboardView::getView);
 
-        stage.setTitle("Rent-a-Car | Management System");
+        stage.setTitle("Roam | Fleet & Rental Management");
+        try {
+            Image appIcon512 = loadAppIcon(512);
+            if (appIcon512 != null) stage.getIcons().add(appIcon512);
+            Image appIcon32 = loadAppIcon(32);
+            if (appIcon32 != null) stage.getIcons().add(appIcon32);
+        } catch (Exception ignored) {
+        }
+
         stage.setMinWidth(360);
         stage.setMinHeight(520);
         stage.setScene(scene);
@@ -110,7 +151,7 @@ public class App extends Application {
     }
 
     private HBox createMobileTopBar() {
-        HBox topBar = new HBox(12);
+        HBox topBar = new HBox(10);
         topBar.getStyleClass().add("mobile-top-bar");
         topBar.setAlignment(Pos.CENTER_LEFT);
 
@@ -118,7 +159,17 @@ public class App extends Application {
         hamburgerBtn.getStyleClass().add("hamburger-btn");
         hamburgerBtn.setOnAction(e -> toggleDrawer());
 
-        mobileTitleLabel = new Label("Rent-a-Car");
+        Image logoImg = loadBrandLogo(64);
+        ImageView logoView = null;
+        if (logoImg != null) {
+            logoView = new ImageView(logoImg);
+            logoView.setFitWidth(24);
+            logoView.setFitHeight(24);
+            logoView.setPreserveRatio(true);
+            logoView.getStyleClass().add("brand-logo-img");
+        }
+
+        mobileTitleLabel = new Label("Roam");
         mobileTitleLabel.getStyleClass().add("mobile-title");
 
         mobileScreenBadge = new Label("Dashboard");
@@ -127,7 +178,11 @@ public class App extends Application {
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
 
-        topBar.getChildren().addAll(hamburgerBtn, mobileTitleLabel, mobileScreenBadge, spacer);
+        if (logoView != null) {
+            topBar.getChildren().addAll(hamburgerBtn, logoView, mobileTitleLabel, mobileScreenBadge, spacer);
+        } else {
+            topBar.getChildren().addAll(hamburgerBtn, mobileTitleLabel, mobileScreenBadge, spacer);
+        }
         return topBar;
     }
 
@@ -160,13 +215,32 @@ public class App extends Application {
         VBox sidebar = new VBox(6);
         sidebar.getStyleClass().add(isDrawer ? "nav-drawer" : "sidebar");
 
-        HBox headerBox = new HBox(8);
+        HBox headerBox = new HBox(10);
         headerBox.setAlignment(Pos.CENTER_LEFT);
-        Label appTitle = new Label("Alieon's Rent-a-Car");
-        appTitle.getStyleClass().add("sidebar-title");
-        HBox.setHgrow(appTitle, Priority.ALWAYS);
+        headerBox.getStyleClass().add("sidebar-header-box");
 
-        headerBox.getChildren().add(appTitle);
+        Image logoImg = loadBrandLogo(64);
+        ImageView logoView = null;
+        if (logoImg != null) {
+            logoView = new ImageView(logoImg);
+            logoView.setFitWidth(28);
+            logoView.setFitHeight(28);
+            logoView.setPreserveRatio(true);
+            logoView.getStyleClass().add("sidebar-brand-logo");
+        }
+
+        VBox titleBox = new VBox(1);
+        Label appTitle = new Label("Roam");
+        appTitle.getStyleClass().add("sidebar-title");
+        Label subtitle = new Label("FLEET & RENTALS");
+        subtitle.getStyleClass().add("sidebar-subtitle");
+        titleBox.getChildren().addAll(appTitle, subtitle);
+        HBox.setHgrow(titleBox, Priority.ALWAYS);
+
+        if (logoView != null) {
+            headerBox.getChildren().add(logoView);
+        }
+        headerBox.getChildren().add(titleBox);
 
         if (isDrawer) {
             Button closeBtn = new Button("✕");

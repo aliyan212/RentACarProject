@@ -64,7 +64,7 @@ mkdir -p "${STAGE_DIR}/META-INF"
 cat << 'EOF' > "${STAGE_DIR}/META-INF/MANIFEST.MF"
 Manifest-Version: 1.0
 Main-Class: main.Launcher
-Implementation-Title: Rent-A-Car
+Implementation-Title: Roam
 Implementation-Version: 1.0.0
 Implementation-Vendor: Alieon FOSS
 EOF

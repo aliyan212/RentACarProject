@@ -62,7 +62,7 @@ public class ViewHelper {
         scroll.setHbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
         scroll.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
         scroll.setPannable(true);
-        scroll.setStyle("-fx-background-color: transparent; -fx-background: transparent;");
+        scroll.setStyle("-fx-background-color: transparent; -fx-background: transparent; -fx-border-color: transparent; -fx-border-width: 0; -fx-padding: 0;");
         return scroll;
     }
 
@@ -102,12 +102,27 @@ public class ViewHelper {
         var css = ViewHelper.class.getResource("/resources/style.css");
         if (css == null)
             css = ViewHelper.class.getResource("/style.css");
-        if (css != null)
+        if (css != null && !pane.getStylesheets().contains(css.toExternalForm()))
             pane.getStylesheets().add(css.toExternalForm());
         pane.getStyleClass().add("dialog-pane");
-        pane.setMinWidth(300);
-        pane.setPrefWidth(420);
-        pane.setMaxWidth(520);
+        pane.setMinWidth(320);
+        pane.setPrefWidth(440);
+        pane.setMaxWidth(560);
+
+        pane.sceneProperty().addListener((obs, oldS, newS) -> {
+            if (newS != null) {
+                newS.setFill(javafx.scene.paint.Color.web("#191924"));
+                if (newS.getWindow() instanceof javafx.stage.Stage stage) {
+                    try {
+                        var is = ViewHelper.class.getResourceAsStream("/resources/icon-32.png");
+                        if (is != null) stage.getIcons().add(new javafx.scene.image.Image(is));
+                    } catch (Exception ignored) {}
+                }
+            }
+        });
+        if (pane.getScene() != null) {
+            pane.getScene().setFill(javafx.scene.paint.Color.web("#191924"));
+        }
     }
 
     public static void showError(String msg, SQLException e) {

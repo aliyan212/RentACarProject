@@ -9,8 +9,8 @@
     <version>1.0.0</version>
     <packaging>jar</packaging>
 
-    <name>Rent-A-Car</name>
-    <description>Alieon's Rent-a-Car Management System</description>
+    <name>Roam</name>
+    <description>Roam Fleet &amp; Car Rental Management System</description>
 
     <properties>
         <maven.compiler.source>21</maven.compiler.source>

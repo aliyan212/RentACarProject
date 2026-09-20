@@ -554,7 +554,7 @@ public class SalesView {
         copyBtn.setOnAction(e -> {
             StringBuilder sb = new StringBuilder();
             sb.append("═══════════════════════════════════\n");
-            sb.append("   ALIEON'S RENT-A-CAR INVOICE     \n");
+            sb.append("     ROAM CAR RENTALS INVOICE      \n");
             sb.append("═══════════════════════════════════\n");
             sb.append("Rental ID:       #").append(s.getSaleId()).append("\n");
             sb.append("Customer CNIC:   ").append(s.getCustomerCnic()).append("\n");

@@ -15,7 +15,7 @@
     <left>
         <VBox fx:id="sidebar" styleClass="sidebar" spacing="6">
             <children>
-                <Label text="Alieon's Rent-a-Car" styleClass="sidebar-title"/>
+                <Label text="Roam" styleClass="sidebar-title"/>
                 <Separator/>
                 <ToggleButton fx:id="btnDash" text="Dashboard" styleClass="nav-button" maxWidth="Infinity"/>
                 <Separator/>

@@ -43,11 +43,49 @@ jobs:
           path: release-artifacts/*
 
   # --------------------------------------------------------------------------
+  # 2. Build Android Native APK via GluonFX & GraalVM
+  # --------------------------------------------------------------------------
+  build-android:
+    name: Build Android APK
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Gluon GraalVM
+        uses: gluonhq/setup-graalvm@master
+        with:
+          graalvm: '22.1.0.1-Final'
+          jdk: 'java17'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Build Android Native Image & APK
+        env:
+          MAVEN_OPTS: "-XX:-UseContainerSupport -Djdk.internal.platform.useFallback=true"
+        run: |
+          chmod +x ./mvnw
+          ./mvnw clean gluonfx:build -Pandroid -DskipTests
+          ./mvnw gluonfx:package -Pandroid -DskipTests
+          mkdir -p android-artifacts
+          find target/gluonfx -name "*.apk" -exec cp {} android-artifacts/rent-a-car.apk \; || true
+
+      - name: Upload Android APK
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: android-apk
+          path: android-artifacts/*.apk
+
+  # --------------------------------------------------------------------------
   # 3. Publish to GitHub Release
   # --------------------------------------------------------------------------
   publish-release:
     name: Publish GitHub Release
-    needs: [build-universal]
+    needs: [build-universal, build-android]
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
     steps:

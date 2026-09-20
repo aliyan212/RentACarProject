@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#181926"/>
+      <stop offset="100%" stop-color="#0f1017"/>
+    </linearGradient>
+    <linearGradient id="blueGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38bdf8"/>
+      <stop offset="100%" stop-color="#2563eb"/>
+    </linearGradient>
+  </defs>
+  <!-- Background Squircle -->
+  <rect width="512" height="512" rx="116" fill="url(#bgGrad)"/>
+  
+  <!-- Subtle inner border for depth -->
+  <rect x="8" y="8" width="496" height="496" rx="108" fill="none" stroke="#2b2d3d" stroke-width="2"/>
+
+  <!-- Roam Mark: Continuous open-road loop / steering wheel -->
+  <!-- Outer smooth arc -->
+  <path d="M 170 340 A 130 130 0 1 1 342 340" fill="none" stroke="url(#blueGrad)" stroke-width="34" stroke-linecap="round"/>
+  
+  <!-- Center forward motion arrow / road marker -->
+  <path d="M 256 180 L 256 290" fill="none" stroke="#ffffff" stroke-width="30" stroke-linecap="round"/>
+  <circle cx="256" cy="340" r="16" fill="#38bdf8"/>
+</svg>
