@@ -96,12 +96,11 @@ public class CustomerView {
         FlowPane toolbar = new FlowPane(10, 10, searchField, addBtn, deleteBtn);
         toolbar.setAlignment(Pos.CENTER_LEFT);
 
-        addBtn.setOnAction(e -> showAddDialog().ifPresent(c -> {
+        addBtn.setOnAction(e -> showAddAndSaveDialog().ifPresent(c -> {
             try {
-                dao.insert(c.getCnic(), c.getName(), c.getAddress(), c.getPhone(), c.getLicense());
                 data.setAll(dao.listCustomers());
             } catch (SQLException ex) {
-                ViewHelper.showError("Could not add customer", ex);
+                ViewHelper.showError("Could not refresh customers", ex);
             }
         }));
 
@@ -129,7 +128,22 @@ public class CustomerView {
         return ViewHelper.createResponsiveScroll(content);
     }
 
-    private static Optional<Customer> showAddDialog() {
+    public static Optional<Customer> showAddAndSaveDialog() {
+        Optional<Customer> opt = showAddDialog();
+        if (opt.isPresent()) {
+            Customer c = opt.get();
+            try {
+                new CustomerDAO().insert(c.getCnic(), c.getName(), c.getAddress(), c.getPhone(), c.getLicense());
+                return Optional.of(c);
+            } catch (SQLException ex) {
+                ViewHelper.showError("Could not add customer", ex);
+                return Optional.empty();
+            }
+        }
+        return Optional.empty();
+    }
+
+    public static Optional<Customer> showAddDialog() {
         Dialog<Customer> dlg = new Dialog<>();
         dlg.setTitle("Add Customer");
         dlg.setHeaderText(null);

@@ -291,14 +291,12 @@ public class SalesView {
 
         applyFilters.run();
 
-        addBtn.setOnAction(e -> showAddDialog().ifPresent(b -> {
+        addBtn.setOnAction(e -> showAddAndSaveDialog().ifPresent(s -> {
             try {
-                dao.insertWithInitialPayment(b.customerCnic, b.carId, b.driverCnic,
-                        b.startDate, b.endDate, b.rentalType, b.totalAmount, b.initialPayment);
                 data.setAll(dao.listSalesWithBalance());
                 applyFilters.run();
             } catch (SQLException ex) {
-                ViewHelper.showError("Could not add sale", ex);
+                ViewHelper.showError("Could not refresh rentals", ex);
             }
         }));
 
@@ -350,7 +348,27 @@ public class SalesView {
         }
     }
 
-    private static Optional<NewBooking> showAddDialog() {
+    public static Optional<Sale> showAddAndSaveDialog() {
+        Optional<NewBooking> opt = showAddDialog();
+        if (opt.isPresent()) {
+            NewBooking b = opt.get();
+            try {
+                SaleDAO dao = new SaleDAO();
+                dao.insertWithInitialPayment(b.customerCnic, b.carId, b.driverCnic,
+                        b.startDate, b.endDate, b.rentalType, b.totalAmount, b.initialPayment);
+                List<Sale> list = dao.listSalesWithBalance();
+                if (!list.isEmpty()) {
+                    return Optional.of(list.get(0));
+                }
+            } catch (SQLException ex) {
+                ViewHelper.showError("Could not add rental", ex);
+                return Optional.empty();
+            }
+        }
+        return Optional.empty();
+    }
+
+    public static Optional<NewBooking> showAddDialog() {
         Dialog<NewBooking> dlg = new Dialog<>();
         dlg.setTitle("New Rental");
         dlg.setHeaderText(null);
@@ -368,7 +386,7 @@ public class SalesView {
         ComboBox<Customer> custCombo = new ComboBox<>(filtCust);
         custCombo.setEditable(true);
         custCombo.setMaxWidth(Double.MAX_VALUE);
-        custCombo.setPromptText("Type to search…");
+        custCombo.setPromptText(allCust.isEmpty() ? "No customers — click + New" : "Type to search…");
         custCombo.setConverter(new StringConverter<>() {
             @Override
             public String toString(Customer c) {
@@ -397,6 +415,17 @@ public class SalesView {
             });
         });
 
+        Button newCustBtn = new Button("+ New");
+        newCustBtn.getStyleClass().add("btn-secondary");
+        newCustBtn.setStyle("-fx-font-size: 11px; -fx-padding: 6 12;");
+        newCustBtn.setOnAction(e -> CustomerView.showAddAndSaveDialog().ifPresent(c -> {
+            allCust.add(c);
+            custCombo.setValue(c);
+        }));
+        HBox custBox = new HBox(8, custCombo, newCustBtn);
+        HBox.setHgrow(custCombo, Priority.ALWAYS);
+        custBox.setAlignment(Pos.CENTER_LEFT);
+
         List<Vehicle> vehList = List.of();
         try {
             vehList = new VehicleDAO().listVehicles();
@@ -408,7 +437,7 @@ public class SalesView {
         ComboBox<Vehicle> carCombo = new ComboBox<>(filtVeh);
         carCombo.setEditable(true);
         carCombo.setMaxWidth(Double.MAX_VALUE);
-        carCombo.setPromptText("Type to search…");
+        carCombo.setPromptText(allVeh.isEmpty() ? "No vehicles — click + New" : "Type to search…");
         carCombo.setConverter(new StringConverter<>() {
             @Override
             public String toString(Vehicle v) {
@@ -436,6 +465,17 @@ public class SalesView {
                     carCombo.show();
             });
         });
+
+        Button newVehBtn = new Button("+ New");
+        newVehBtn.getStyleClass().add("btn-secondary");
+        newVehBtn.setStyle("-fx-font-size: 11px; -fx-padding: 6 12;");
+        newVehBtn.setOnAction(e -> VehicleView.showAddAndSaveDialog().ifPresent(v -> {
+            allVeh.add(v);
+            carCombo.setValue(v);
+        }));
+        HBox carBox = new HBox(8, carCombo, newVehBtn);
+        HBox.setHgrow(carCombo, Priority.ALWAYS);
+        carBox.setAlignment(Pos.CENTER_LEFT);
 
         List<Driver> drvList = List.of();
         try {
@@ -483,6 +523,17 @@ public class SalesView {
         });
         driverCombo.setValue(selfDrive);
 
+        Button newDrvBtn = new Button("+ New");
+        newDrvBtn.getStyleClass().add("btn-secondary");
+        newDrvBtn.setStyle("-fx-font-size: 11px; -fx-padding: 6 12;");
+        newDrvBtn.setOnAction(e -> DriverView.showAddAndSaveDialog().ifPresent(d -> {
+            allDrv.add(d);
+            driverCombo.setValue(d);
+        }));
+        HBox drvBox = new HBox(8, driverCombo, newDrvBtn);
+        HBox.setHgrow(driverCombo, Priority.ALWAYS);
+        drvBox.setAlignment(Pos.CENTER_LEFT);
+
         DatePicker startPicker = new DatePicker(LocalDate.now());
         startPicker.setMaxWidth(Double.MAX_VALUE);
         DatePicker endPicker = new DatePicker(LocalDate.now().plusDays(1));
@@ -496,9 +547,9 @@ public class SalesView {
         TextField advanceField = ViewHelper.field("0 (optional advance payment)");
 
         dlg.getDialogPane().setContent(ViewHelper.form(
-                "Customer", custCombo,
-                "Vehicle", carCombo,
-                "Driver", driverCombo,
+                "Customer", custBox,
+                "Vehicle", carBox,
+                "Driver", drvBox,
                 "Start Date", startPicker,
                 "End Date", endPicker,
                 "Rental Type", typeCombo,

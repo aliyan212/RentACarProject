@@ -95,12 +95,11 @@ public class VehicleView {
         FlowPane toolbar = new FlowPane(10, 10, searchField, addBtn, deleteBtn);
         toolbar.setAlignment(Pos.CENTER_LEFT);
 
-        addBtn.setOnAction(e -> showAddDialog().ifPresent(v -> {
+        addBtn.setOnAction(e -> showAddAndSaveDialog().ifPresent(v -> {
             try {
-                dao.insert(v.getModel(), v.getPurchasePrice(), v.getOwnershipPercentage());
-                data.setAll(dao.listVehicles()); // reload to get auto-generated car_ID
+                data.setAll(dao.listVehicles());
             } catch (SQLException ex) {
-                ViewHelper.showError("Could not add vehicle", ex);
+                ViewHelper.showError("Could not refresh vehicles", ex);
             }
         }));
 
@@ -128,7 +127,22 @@ public class VehicleView {
         return ViewHelper.createResponsiveScroll(content);
     }
 
-    private static Optional<Vehicle> showAddDialog() {
+    public static Optional<Vehicle> showAddAndSaveDialog() {
+        Optional<Vehicle> opt = showAddDialog();
+        if (opt.isPresent()) {
+            Vehicle v = opt.get();
+            try {
+                int carId = new VehicleDAO().insert(v.getModel(), v.getPurchasePrice(), v.getOwnershipPercentage());
+                return Optional.of(new Vehicle(carId, v.getModel(), v.getPurchasePrice(), v.getOwnershipPercentage()));
+            } catch (SQLException ex) {
+                ViewHelper.showError("Could not add vehicle", ex);
+                return Optional.empty();
+            }
+        }
+        return Optional.empty();
+    }
+
+    public static Optional<Vehicle> showAddDialog() {
         Dialog<Vehicle> dlg = new Dialog<>();
         dlg.setTitle("Add Vehicle");
         dlg.setHeaderText(null);

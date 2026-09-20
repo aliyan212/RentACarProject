@@ -111,12 +111,11 @@ public class DriverView {
         FlowPane toolbar = new FlowPane(10, 10, searchField, addBtn, deleteBtn);
         toolbar.setAlignment(Pos.CENTER_LEFT);
 
-        addBtn.setOnAction(e -> showAddDialog().ifPresent(d -> {
+        addBtn.setOnAction(e -> showAddAndSaveDialog().ifPresent(d -> {
             try {
-                dao.insert(d.getCnic(), d.getName(), d.getLicense(), d.getPhone(), d.getStatus());
                 data.setAll(dao.listDrivers());
             } catch (SQLException ex) {
-                ViewHelper.showError("Could not add driver", ex);
+                ViewHelper.showError("Could not refresh drivers", ex);
             }
         }));
 
@@ -144,7 +143,22 @@ public class DriverView {
         return ViewHelper.createResponsiveScroll(content);
     }
 
-    private static Optional<Driver> showAddDialog() {
+    public static Optional<Driver> showAddAndSaveDialog() {
+        Optional<Driver> opt = showAddDialog();
+        if (opt.isPresent()) {
+            Driver d = opt.get();
+            try {
+                new DriverDAO().insert(d.getCnic(), d.getName(), d.getLicense(), d.getPhone(), d.getStatus());
+                return Optional.of(d);
+            } catch (SQLException ex) {
+                ViewHelper.showError("Could not add driver", ex);
+                return Optional.empty();
+            }
+        }
+        return Optional.empty();
+    }
+
+    public static Optional<Driver> showAddDialog() {
         Dialog<Driver> dlg = new Dialog<>();
         dlg.setTitle("Add Driver");
         dlg.setHeaderText(null);

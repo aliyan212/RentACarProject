@@ -211,6 +211,17 @@ public class ExpenseView {
         });
         saleCombo.setValue(noSale);
 
+        Button newSaleBtn = new Button("+ New");
+        newSaleBtn.getStyleClass().add("btn-secondary");
+        newSaleBtn.setStyle("-fx-font-size: 11px; -fx-padding: 6 12;");
+        newSaleBtn.setOnAction(e -> SalesView.showAddAndSaveDialog().ifPresent(ns -> {
+            allSales.add(1, ns);
+            saleCombo.setValue(ns);
+        }));
+        HBox saleBox = new HBox(8, saleCombo, newSaleBtn);
+        HBox.setHgrow(saleCombo, Priority.ALWAYS);
+        saleBox.setAlignment(Pos.CENTER_LEFT);
+
         List<Vehicle> vehList = List.of();
         try {
             vehList = new VehicleDAO().listVehicles();
@@ -257,6 +268,17 @@ public class ExpenseView {
         });
         carCombo.setValue(noVeh);
 
+        Button newVehBtn = new Button("+ New");
+        newVehBtn.getStyleClass().add("btn-secondary");
+        newVehBtn.setStyle("-fx-font-size: 11px; -fx-padding: 6 12;");
+        newVehBtn.setOnAction(e -> VehicleView.showAddAndSaveDialog().ifPresent(nv -> {
+            allVeh.add(1, nv);
+            carCombo.setValue(nv);
+        }));
+        HBox carBox = new HBox(8, carCombo, newVehBtn);
+        HBox.setHgrow(carCombo, Priority.ALWAYS);
+        carBox.setAlignment(Pos.CENTER_LEFT);
+
         ComboBox<String> categoryCombo = new ComboBox<>(
                 FXCollections.observableArrayList("Fuel", "Repair", "Insurance", "Other"));
         categoryCombo.setMaxWidth(Double.MAX_VALUE);
@@ -283,8 +305,8 @@ public class ExpenseView {
                 "Category", categoryCombo,
                 "Other", otherDetailsField,
                 "Paid By", payerCombo,
-                "Sale", saleCombo,
-                "Vehicle", carCombo,
+                "Sale", saleBox,
+                "Vehicle", carBox,
                 "Amount", amountField,
                 "Date", datePicker));
 

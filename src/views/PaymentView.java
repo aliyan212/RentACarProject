@@ -219,7 +219,20 @@ public class PaymentView {
             });
         });
 
-        VBox saleBox = new VBox(4, saleCombo, balanceInfoLabel);
+        saleCombo.setPromptText(allSales.isEmpty() ? "No rentals — click + New" : "Type to search…");
+
+        Button newRentalBtn = new Button("+ New Rental");
+        newRentalBtn.getStyleClass().add("btn-secondary");
+        newRentalBtn.setStyle("-fx-font-size: 11px; -fx-padding: 6 12;");
+        newRentalBtn.setOnAction(e -> SalesView.showAddAndSaveDialog().ifPresent(ns -> {
+            allSales.add(0, ns);
+            saleCombo.setValue(ns);
+        }));
+        HBox saleRow = new HBox(8, saleCombo, newRentalBtn);
+        HBox.setHgrow(saleCombo, Priority.ALWAYS);
+        saleRow.setAlignment(Pos.CENTER_LEFT);
+
+        VBox saleBox = new VBox(4, saleRow, balanceInfoLabel);
 
         dlg.getDialogPane().setContent(ViewHelper.form(
                 "Sale", saleBox,

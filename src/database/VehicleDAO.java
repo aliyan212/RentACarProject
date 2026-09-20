@@ -31,14 +31,20 @@ public class VehicleDAO {
         }
     }
 
-    public void insert(String model, String purchasePrice, double ownershipPercentage) throws SQLException {
+    public int insert(String model, String purchasePrice, double ownershipPercentage) throws SQLException {
         String sql = "INSERT INTO Vehicles (model, purchase_Price, ownership_Percentage) VALUES (?, ?, ?)";
         try (Connection conn = DBConfig.getConnection();
-                PreparedStatement ps = conn.prepareStatement(sql)) {
+                PreparedStatement ps = conn.prepareStatement(sql, java.sql.Statement.RETURN_GENERATED_KEYS)) {
             ps.setString(1, model);
             ps.setString(2, purchasePrice);
             ps.setDouble(3, ownershipPercentage);
             ps.executeUpdate();
+            try (ResultSet rs = ps.getGeneratedKeys()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+            }
+            return 0;
         }
     }
 
