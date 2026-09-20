@@ -42,6 +42,7 @@ public class DashboardDAO {
     public static class VehicleEarning {
         public int carId;
         public String model;
+        public double ownershipPercentage;
         public long totalBilled;
         public long totalReceived;
         public long totalExpenses;
@@ -91,8 +92,7 @@ public class DashboardDAO {
 
             rs = st.executeQuery(
                     "SELECT COUNT(*) FROM Sales s " +
-                        "WHERE s.end_date >= date('now') " +
-                            "  AND s.Total > COALESCE((SELECT SUM(p.money_paid) FROM Payment p WHERE p.sale_id = s.sale_id), 0)");
+                        "WHERE s.start_date <= date('now') AND s.end_date >= date('now')");
             if (rs.next())
                 s.activeSales = rs.getInt(1);
 
@@ -132,7 +132,18 @@ public class DashboardDAO {
                 s.businessExpenses = rs.getLong(1);
 
             s.netProfit = s.totalReceived - s.businessExpenses;
-            s.outstanding = s.totalBilled - s.totalReceived;
+
+            // Outstanding balance: sum of remaining unpaid amounts on sales
+            String outstandingWhere = period == Period.CURRENT_MONTH
+                    ? (" WHERE (s.Total - COALESCE(p.paid, 0)) > 0 AND s.start_date >= " + monthStartExpr + " AND s.start_date < " + monthEndExpr)
+                    : " WHERE (s.Total - COALESCE(p.paid, 0)) > 0";
+            rs = st.executeQuery(
+                    "SELECT COALESCE(SUM(s.Total - COALESCE(p.paid, 0)), 0) " +
+                    "FROM Sales s " +
+                    "LEFT JOIN (SELECT sale_id, SUM(money_paid) AS paid FROM Payment GROUP BY sale_id) p ON s.sale_id = p.sale_id" +
+                    outstandingWhere);
+            if (rs.next())
+                s.outstanding = rs.getLong(1);
 
             if (period == Period.CURRENT_MONTH) {
                 rs = st.executeQuery(
@@ -193,7 +204,7 @@ public class DashboardDAO {
                 ? (" WHERE date >= " + monthStartExpr + " AND date < " + monthEndExpr + " ")
                 : "";
 
-        String sql = "SELECT v.car_ID, v.model, " +
+        String sql = "SELECT v.car_ID, v.model, COALESCE(v.ownership_Percentage, 100.0) AS ownership, " +
                 "  COALESCE(billed.total, 0)    AS total_billed, " +
                 "  COALESCE(received.total, 0)  AS total_received, " +
                 "  COALESCE(expenses.total, 0)  AS total_expenses " +
@@ -226,10 +237,16 @@ public class DashboardDAO {
                 VehicleEarning ve = new VehicleEarning();
                 ve.carId = rs.getInt("car_ID");
                 ve.model = rs.getString("model");
+                ve.ownershipPercentage = rs.getDouble("ownership");
                 ve.totalBilled = rs.getLong("total_billed");
                 ve.totalReceived = rs.getLong("total_received");
                 ve.totalExpenses = rs.getLong("total_expenses");
-                ve.netProfit = ve.totalReceived - ve.totalExpenses;
+                double margin = ve.totalReceived - ve.totalExpenses;
+                if (ve.ownershipPercentage > 0 && ve.ownershipPercentage <= 100.0) {
+                    ve.netProfit = Math.round(margin * (ve.ownershipPercentage / 100.0));
+                } else {
+                    ve.netProfit = (long) margin;
+                }
                 list.add(ve);
             }
             return list;

@@ -144,7 +144,7 @@ public class PaymentView {
 
         List<Sale> saleList = List.of();
         try {
-            saleList = new SaleDAO().listSales();
+            saleList = new SaleDAO().listSalesWithBalance();
         } catch (SQLException e) {
             ViewHelper.showError("Could not load sales", e);
         }
@@ -154,11 +154,16 @@ public class PaymentView {
         saleCombo.setEditable(true);
         saleCombo.setMaxWidth(Double.MAX_VALUE);
         saleCombo.setPromptText("Type to search…");
+
+        NumberFormat fmt = NumberFormat.getNumberInstance(Locale.US);
+
         saleCombo.setConverter(new StringConverter<>() {
             @Override
             public String toString(Sale s) {
-                return s == null ? ""
-                        : "Sale #" + s.getSaleId() + " | Cust " + s.getCustomerCnic() + " | " + s.getRentalType();
+                if (s == null)
+                    return "";
+                String balStr = s.getBalance() <= 0 ? "Paid" : "Due: PKR " + fmt.format(s.getBalance());
+                return "Sale #" + s.getSaleId() + " | Cust " + s.getCustomerCnic() + " | " + balStr;
             }
 
             @Override
@@ -166,8 +171,35 @@ public class PaymentView {
                 return allSales.stream().filter(s -> toString(s).equals(str)).findFirst().orElse(null);
             }
         });
+
+        Label balanceInfoLabel = new Label("");
+        balanceInfoLabel.setWrapText(true);
+
+        TextField amountField = ViewHelper.field("e.g. 5000");
+        DatePicker datePicker = new DatePicker(LocalDate.now());
+        datePicker.setMaxWidth(Double.MAX_VALUE);
+
         boolean[] saleSelecting = { false };
-        saleCombo.valueProperty().addListener((obs, o, n) -> saleSelecting[0] = true);
+        saleCombo.valueProperty().addListener((obs, o, n) -> {
+            saleSelecting[0] = true;
+            if (n != null) {
+                long bal = (long) Math.ceil(n.getBalance());
+                if (bal > 0) {
+                    balanceInfoLabel.setText(String.format("Billed: PKR %s  |  Paid: PKR %s  |  Due: PKR %s",
+                            fmt.format(n.getTotalAmount()), fmt.format(n.getAmountPaid()), fmt.format(bal)));
+                    balanceInfoLabel.setStyle("-fx-text-fill: #ffd43b; -fx-font-size: 12px; -fx-font-weight: 700;");
+                    amountField.setText(String.valueOf(bal));
+                } else {
+                    balanceInfoLabel.setText(String.format("Billed: PKR %s  |  Paid: PKR %s  |  Fully Paid (PKR 0 due)",
+                            fmt.format(n.getTotalAmount()), fmt.format(n.getAmountPaid())));
+                    balanceInfoLabel.setStyle("-fx-text-fill: #69db7c; -fx-font-size: 12px; -fx-font-weight: 700;");
+                    amountField.setText("0");
+                }
+            } else {
+                balanceInfoLabel.setText("");
+            }
+        });
+
         saleCombo.getEditor().textProperty().addListener((obs, o, n) -> {
             if (saleSelecting[0]) {
                 saleSelecting[0] = false;
@@ -184,13 +216,12 @@ public class PaymentView {
             });
         });
 
-        TextField amountField = ViewHelper.field("e.g. 5000");
-        TextField dateField = ViewHelper.field("YYYY-MM-DD");
+        VBox saleBox = new VBox(4, saleCombo, balanceInfoLabel);
 
         dlg.getDialogPane().setContent(ViewHelper.form(
-                "Sale", saleCombo,
+                "Sale", saleBox,
                 "Amount (PKR)", amountField,
-                "Date", dateField));
+                "Date", datePicker));
 
         ButtonType save = new ButtonType("Save Payment", ButtonBar.ButtonData.OK_DONE);
         dlg.getDialogPane().getButtonTypes().addAll(save, ButtonType.CANCEL);
@@ -203,15 +234,38 @@ public class PaymentView {
                 ViewHelper.showWarning("Please select a sale.");
                 return null;
             }
-            try {
-                return new Payment(0,
-                        sale.getSaleId(),
-                        Double.parseDouble(amountField.getText().trim()),
-                        LocalDate.parse(dateField.getText().trim()));
-            } catch (Exception ex) {
-                ViewHelper.showWarning("Amount must be a number; date format: YYYY-MM-DD.");
+            if (datePicker.getValue() == null) {
+                ViewHelper.showWarning("Please select a valid payment date.");
                 return null;
             }
+
+            double amount;
+            try {
+                amount = Double.parseDouble(amountField.getText().trim());
+                if (amount <= 0) {
+                    ViewHelper.showWarning("Payment amount must be greater than 0.");
+                    return null;
+                }
+            } catch (Exception ex) {
+                ViewHelper.showWarning("Amount must be a valid number.");
+                return null;
+            }
+
+            if (sale.getBalance() <= 0) {
+                ViewHelper.showWarning("Sale #" + sale.getSaleId() + " is already fully paid. No further payments are due.");
+                return null;
+            }
+
+            if (amount > sale.getBalance() + 0.001) {
+                ViewHelper.showWarning(String.format("Payment amount (PKR %s) exceeds the remaining balance (PKR %s) for Sale #%d.",
+                        fmt.format(amount), fmt.format(sale.getBalance()), sale.getSaleId()));
+                return null;
+            }
+
+            return new Payment(0,
+                    sale.getSaleId(),
+                    amount,
+                    datePicker.getValue());
         });
         return dlg.showAndWait();
     }

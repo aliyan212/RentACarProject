@@ -273,7 +273,8 @@ public class ExpenseView {
         payerCombo.setValue("Business");
 
         TextField amountField = ViewHelper.field("e.g. 2500");
-        TextField dateField = ViewHelper.field("YYYY-MM-DD");
+        DatePicker datePicker = new DatePicker(LocalDate.now());
+        datePicker.setMaxWidth(Double.MAX_VALUE);
 
         dlg.getDialogPane().setContent(ViewHelper.form(
                 "Category", categoryCombo,
@@ -282,7 +283,7 @@ public class ExpenseView {
                 "Sale", saleCombo,
                 "Vehicle", carCombo,
                 "Amount", amountField,
-                "Date", dateField));
+                "Date", datePicker));
 
         ButtonType save = new ButtonType("Save Expense", ButtonBar.ButtonData.OK_DONE);
         dlg.getDialogPane().getButtonTypes().addAll(save, ButtonType.CANCEL);
@@ -301,31 +302,43 @@ public class ExpenseView {
                 return null;
             }
             if (payerCombo.getValue() == null || payerCombo.getValue().trim().isEmpty()) {
-                ViewHelper.showWarning("Paid By is required (Business or Customer). ");
+                ViewHelper.showWarning("Paid By is required (Business or Customer).");
                 return null;
             }
             if (categoryCombo.getValue() == null || categoryCombo.getValue().trim().isEmpty()) {
                 ViewHelper.showWarning("Category is required.");
                 return null;
             }
-            try {
-                String category = categoryCombo.getValue().trim();
-                String storedType = category;
-                if ("Other".equalsIgnoreCase(category)) {
-                    String details = otherDetailsField.getText() == null ? "" : otherDetailsField.getText().trim();
-                    storedType = details.isEmpty() ? "Other" : ("Other: " + details);
-                }
-                return new Expense(0,
-                        storedType,
-                        payerCombo.getValue().trim(),
-                        sale.getSaleId(),
-                        car.getCarId(),
-                        Double.parseDouble(amountField.getText().trim()),
-                        LocalDate.parse(dateField.getText().trim()));
-            } catch (Exception ex) {
-                ViewHelper.showWarning("Amount must be a number; date format: YYYY-MM-DD.");
+            if (datePicker.getValue() == null) {
+                ViewHelper.showWarning("Please select a valid expense date.");
                 return null;
             }
+
+            double amount;
+            try {
+                amount = Double.parseDouble(amountField.getText().trim());
+                if (amount <= 0) {
+                    ViewHelper.showWarning("Expense amount must be greater than 0.");
+                    return null;
+                }
+            } catch (Exception ex) {
+                ViewHelper.showWarning("Amount must be a valid number.");
+                return null;
+            }
+
+            String category = categoryCombo.getValue().trim();
+            String storedType = category;
+            if ("Other".equalsIgnoreCase(category)) {
+                String details = otherDetailsField.getText() == null ? "" : otherDetailsField.getText().trim();
+                storedType = details.isEmpty() ? "Other" : ("Other: " + details);
+            }
+            return new Expense(0,
+                    storedType,
+                    payerCombo.getValue().trim(),
+                    sale.getSaleId(),
+                    car.getCarId(),
+                    amount,
+                    datePicker.getValue());
         });
         return dlg.showAndWait();
     }

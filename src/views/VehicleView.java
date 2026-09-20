@@ -146,14 +146,25 @@ public class VehicleView {
         dlg.setResultConverter(btn -> {
             if (btn != save)
                 return null;
-            try {
-                return new Vehicle(0, modelField.getText().trim(),
-                        priceField.getText().trim(),
-                        Double.parseDouble(pctField.getText().trim()));
-            } catch (NumberFormatException ex) {
-                ViewHelper.showWarning("Ownership % must be a number.");
+            String model = modelField.getText() == null ? "" : modelField.getText().trim();
+            if (model.isEmpty()) {
+                ViewHelper.showWarning("Vehicle model name is required.");
                 return null;
             }
+            double pct;
+            try {
+                pct = Double.parseDouble(pctField.getText().trim());
+                if (pct <= 0 || pct > 100) {
+                    ViewHelper.showWarning("Ownership % must be between 1 and 100.");
+                    return null;
+                }
+            } catch (NumberFormatException ex) {
+                ViewHelper.showWarning("Ownership % must be a valid number between 1 and 100.");
+                return null;
+            }
+            return new Vehicle(0, model,
+                    priceField.getText().trim(),
+                    pct);
         });
         return dlg.showAndWait();
     }

@@ -290,10 +290,10 @@ public class SalesView {
 
         applyFilters.run();
 
-        addBtn.setOnAction(e -> showAddDialog().ifPresent(s -> {
+        addBtn.setOnAction(e -> showAddDialog().ifPresent(b -> {
             try {
-                dao.insert(s.getCustomerCnic(), s.getCarId(), s.getDriverCnic(),
-                        s.getStartDate(), s.getEndDate(), s.getRentalType(), s.getTotalAmount());
+                dao.insertWithInitialPayment(b.customerCnic, b.carId, b.driverCnic,
+                        b.startDate, b.endDate, b.rentalType, b.totalAmount, b.initialPayment);
                 data.setAll(dao.listSalesWithBalance());
                 applyFilters.run();
             } catch (SQLException ex) {
@@ -324,8 +324,31 @@ public class SalesView {
         return ViewHelper.createResponsiveScroll(content);
     }
 
-    private static Optional<Sale> showAddDialog() {
-        Dialog<Sale> dlg = new Dialog<>();
+    public static class NewBooking {
+        public final long customerCnic;
+        public final int carId;
+        public final long driverCnic;
+        public final LocalDate startDate;
+        public final LocalDate endDate;
+        public final String rentalType;
+        public final int totalAmount;
+        public final int initialPayment;
+
+        public NewBooking(long customerCnic, int carId, long driverCnic, LocalDate startDate, LocalDate endDate,
+                String rentalType, int totalAmount, int initialPayment) {
+            this.customerCnic = customerCnic;
+            this.carId = carId;
+            this.driverCnic = driverCnic;
+            this.startDate = startDate;
+            this.endDate = endDate;
+            this.rentalType = rentalType;
+            this.totalAmount = totalAmount;
+            this.initialPayment = initialPayment;
+        }
+    }
+
+    private static Optional<NewBooking> showAddDialog() {
+        Dialog<NewBooking> dlg = new Dialog<>();
         dlg.setTitle("New Rental");
         dlg.setHeaderText(null);
         ViewHelper.styleDialog(dlg.getDialogPane());
@@ -457,19 +480,27 @@ public class SalesView {
         });
         driverCombo.setValue(selfDrive);
 
-        TextField startField = ViewHelper.field("YYYY-MM-DD");
-        TextField endField = ViewHelper.field("YYYY-MM-DD");
-        TextField typeField = ViewHelper.field("Daily / Weekly / Monthly");
+        DatePicker startPicker = new DatePicker(LocalDate.now());
+        startPicker.setMaxWidth(Double.MAX_VALUE);
+        DatePicker endPicker = new DatePicker(LocalDate.now().plusDays(1));
+        endPicker.setMaxWidth(Double.MAX_VALUE);
+
+        ComboBox<String> typeCombo = new ComboBox<>(FXCollections.observableArrayList("Daily", "Weekly", "Monthly", "Corporate"));
+        typeCombo.setMaxWidth(Double.MAX_VALUE);
+        typeCombo.setValue("Daily");
+
         TextField totalField = ViewHelper.field("e.g. 15000");
+        TextField advanceField = ViewHelper.field("0 (optional advance payment)");
 
         dlg.getDialogPane().setContent(ViewHelper.form(
                 "Customer", custCombo,
                 "Vehicle", carCombo,
                 "Driver", driverCombo,
-                "Start Date", startField,
-                "End Date", endField,
-                "Rental Type", typeField,
-                "Total (PKR)", totalField));
+                "Start Date", startPicker,
+                "End Date", endPicker,
+                "Rental Type", typeCombo,
+                "Total (PKR)", totalField,
+                "Advance (PKR)", advanceField));
 
         ButtonType save = new ButtonType("Save Rental", ButtonBar.ButtonData.OK_DONE);
         dlg.getDialogPane().getButtonTypes().addAll(save, ButtonType.CANCEL);
@@ -492,19 +523,71 @@ public class SalesView {
                 ViewHelper.showWarning("Please select a driver (or Self-drive).");
                 return null;
             }
-            try {
-                return new Sale(
-                        cust.getCnic(),
-                        car.getCarId(),
-                        drv.getCnic(),
-                        LocalDate.parse(startField.getText().trim()),
-                        LocalDate.parse(endField.getText().trim()),
-                        typeField.getText().trim(),
-                        Integer.parseInt(totalField.getText().trim()));
-            } catch (Exception ex) {
-                ViewHelper.showWarning("Check dates (YYYY-MM-DD) and Total (number).");
+            LocalDate start = startPicker.getValue();
+            LocalDate end = endPicker.getValue();
+            if (start == null || end == null) {
+                ViewHelper.showWarning("Please select valid start and end dates.");
                 return null;
             }
+            if (end.isBefore(start)) {
+                ViewHelper.showWarning("End date cannot be before start date.");
+                return null;
+            }
+
+            int total;
+            try {
+                total = Integer.parseInt(totalField.getText().trim());
+                if (total <= 0) {
+                    ViewHelper.showWarning("Total amount must be greater than 0.");
+                    return null;
+                }
+            } catch (Exception ex) {
+                ViewHelper.showWarning("Total must be a valid positive integer amount.");
+                return null;
+            }
+
+            int advance = 0;
+            String advText = advanceField.getText() == null ? "" : advanceField.getText().trim();
+            if (!advText.isEmpty()) {
+                try {
+                    advance = Integer.parseInt(advText);
+                    if (advance < 0) {
+                        ViewHelper.showWarning("Advance payment cannot be negative.");
+                        return null;
+                    }
+                    if (advance > total) {
+                        ViewHelper.showWarning("Advance payment (PKR " + advance + ") cannot exceed total billed amount (PKR " + total + ").");
+                        return null;
+                    }
+                } catch (Exception ex) {
+                    ViewHelper.showWarning("Advance payment must be a valid integer number.");
+                    return null;
+                }
+            }
+
+            SaleDAO sDao = new SaleDAO();
+            try {
+                if (!sDao.isVehicleAvailable(car.getCarId(), start, end, 0)) {
+                    ViewHelper.showWarning("Vehicle " + car.getModel() + " is already booked for overlapping dates ("
+                            + start + " to " + end + "). Please choose another vehicle or date range.");
+                    return null;
+                }
+                if (drv.getCnic() != 0 && !sDao.isDriverAvailable(drv.getCnic(), start, end, 0)) {
+                    ViewHelper.showWarning("Driver " + drv.getName() + " is already scheduled for another rental between "
+                            + start + " and " + end + ". Please choose another driver or Self-drive.");
+                    return null;
+                }
+            } catch (SQLException ex) {
+                ViewHelper.showError("Failed to check schedule availability", ex);
+                return null;
+            }
+
+            String rType = typeCombo.getValue();
+            if (rType == null || rType.isBlank()) {
+                rType = "Daily";
+            }
+            return new NewBooking(cust.getCnic(), car.getCarId(), drv.getCnic(),
+                    start, end, rType, total, advance);
         });
         return dlg.showAndWait();
     }
