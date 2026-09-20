@@ -104,7 +104,6 @@ public class ExpenseView {
         table.getColumns().add(dateCol);
 
         TextField searchField = ViewHelper.field("🔍 Search expenses by category, payer, ID...");
-        searchField.setPrefWidth(270);
         searchField.textProperty().addListener((obs, oldVal, newVal) -> {
             filteredData.setPredicate(exp -> {
                 if (newVal == null || newVal.isBlank())
@@ -122,8 +121,7 @@ public class ExpenseView {
         addBtn.getStyleClass().add("btn-primary");
         Button deleteBtn = new Button("🗑 Delete");
         deleteBtn.getStyleClass().add("btn-danger");
-        FlowPane toolbar = new FlowPane(10, 10, searchField, addBtn, deleteBtn);
-        toolbar.setAlignment(Pos.CENTER_LEFT);
+        Node toolbar = ViewHelper.createResponsiveToolbar(searchField, addBtn, deleteBtn);
 
         addBtn.setOnAction(e -> showAddDialog().ifPresent(exp -> {
             try {
@@ -211,16 +209,13 @@ public class ExpenseView {
         });
         saleCombo.setValue(noSale);
 
-        Button newSaleBtn = new Button("+ New");
-        newSaleBtn.getStyleClass().add("btn-secondary");
-        newSaleBtn.setStyle("-fx-font-size: 11px; -fx-padding: 6 12;");
-        newSaleBtn.setOnAction(e -> SalesView.showAddAndSaveDialog().ifPresent(ns -> {
-            allSales.add(1, ns);
-            saleCombo.setValue(ns);
-        }));
-        HBox saleBox = new HBox(8, saleCombo, newSaleBtn);
-        HBox.setHgrow(saleCombo, Priority.ALWAYS);
-        saleBox.setAlignment(Pos.CENTER_LEFT);
+        Button newSaleBtn = ViewHelper.createInlineAddButton("+ New", "Create a new rental booking", () -> {
+            SalesView.showAddAndSaveDialog().ifPresent(ns -> {
+                allSales.add(1, ns);
+                saleCombo.setValue(ns);
+            });
+        });
+        HBox saleBox = ViewHelper.createInlineFieldBox(saleCombo, newSaleBtn);
 
         List<Vehicle> vehList = List.of();
         try {
@@ -268,16 +263,13 @@ public class ExpenseView {
         });
         carCombo.setValue(noVeh);
 
-        Button newVehBtn = new Button("+ New");
-        newVehBtn.getStyleClass().add("btn-secondary");
-        newVehBtn.setStyle("-fx-font-size: 11px; -fx-padding: 6 12;");
-        newVehBtn.setOnAction(e -> VehicleView.showAddAndSaveDialog().ifPresent(nv -> {
-            allVeh.add(1, nv);
-            carCombo.setValue(nv);
-        }));
-        HBox carBox = new HBox(8, carCombo, newVehBtn);
-        HBox.setHgrow(carCombo, Priority.ALWAYS);
-        carBox.setAlignment(Pos.CENTER_LEFT);
+        Button newVehBtn = ViewHelper.createInlineAddButton("+ New", "Add a new vehicle to fleet", () -> {
+            VehicleView.showAddAndSaveDialog().ifPresent(nv -> {
+                allVeh.add(1, nv);
+                carCombo.setValue(nv);
+            });
+        });
+        HBox carBox = ViewHelper.createInlineFieldBox(carCombo, newVehBtn);
 
         ComboBox<String> categoryCombo = new ComboBox<>(
                 FXCollections.observableArrayList("Fuel", "Repair", "Insurance", "Other"));

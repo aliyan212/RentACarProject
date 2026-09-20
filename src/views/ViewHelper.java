@@ -27,8 +27,8 @@ public class ViewHelper {
         grid.setMaxWidth(Double.MAX_VALUE);
 
         ColumnConstraints col1 = new ColumnConstraints();
-        col1.setMinWidth(90);
-        col1.setPrefWidth(110);
+        col1.setMinWidth(110);
+        col1.setPrefWidth(130);
         col1.setHalignment(HPos.LEFT);
 
         ColumnConstraints col2 = new ColumnConstraints();
@@ -48,11 +48,10 @@ public class ViewHelper {
             grid.add(input, 1, i / 2);
         }
 
-        // Wrap inside a touch-pannable ScrollPane so inputs on mobile virtual keyboards
-        // are never cut off
+        // Wrap inside a smooth ScrollPane sized comfortably for modern displays
         ScrollPane scroll = createResponsiveScroll(grid);
-        scroll.setMaxHeight(420);
-        scroll.setPrefWidth(400);
+        scroll.setMaxHeight(520);
+        scroll.setPrefWidth(540);
         return scroll;
     }
 
@@ -185,9 +184,9 @@ public class ViewHelper {
         if (css != null && !pane.getStylesheets().contains(css.toExternalForm()))
             pane.getStylesheets().add(css.toExternalForm());
         pane.getStyleClass().add("dialog-pane");
-        pane.setMinWidth(320);
-        pane.setPrefWidth(440);
-        pane.setMaxWidth(560);
+        pane.setMinWidth(460);
+        pane.setPrefWidth(580);
+        pane.setMaxWidth(760);
 
         pane.sceneProperty().addListener((obs, oldS, newS) -> {
             if (newS != null) {
@@ -205,6 +204,78 @@ public class ViewHelper {
             pane.getScene().setFill(javafx.scene.paint.Color.web("#191924"));
             animateDialogEntrance(pane);
         }
+    }
+
+    public static Button createInlineAddButton(String text, String tooltipText, Runnable onAction) {
+        Button btn = new Button(text == null || text.isBlank() ? "+ New" : text);
+        btn.getStyleClass().add("btn-action-inline");
+        btn.setMinWidth(Region.USE_PREF_SIZE);
+        btn.setMinHeight(38);
+        btn.setPrefHeight(38);
+        if (tooltipText != null && !tooltipText.isBlank()) {
+            btn.setTooltip(new Tooltip(tooltipText));
+        }
+        if (onAction != null) {
+            btn.setOnAction(e -> onAction.run());
+        }
+        addHoverScale(btn, 1.04);
+        return btn;
+    }
+
+    public static HBox createInlineFieldBox(Control mainControl, Button inlineButton) {
+        HBox.setHgrow(mainControl, Priority.ALWAYS);
+        mainControl.setMaxWidth(Double.MAX_VALUE);
+        HBox box = new HBox(8, mainControl, inlineButton);
+        box.setAlignment(Pos.CENTER_LEFT);
+        box.setMaxWidth(Double.MAX_VALUE);
+        return box;
+    }
+
+    public static Node createResponsiveToolbar(TextField searchField, Node... actionButtons) {
+        HBox actions = new HBox(10, actionButtons);
+        actions.setAlignment(Pos.CENTER_RIGHT);
+
+        if (searchField == null) {
+            actions.getStyleClass().add("toolbar-responsive");
+            return actions;
+        }
+
+        searchField.setMinWidth(200);
+        searchField.setPrefWidth(380);
+        searchField.setMaxWidth(560);
+        searchField.getStyleClass().add("search-field");
+
+        BorderPane bar = new BorderPane();
+        bar.getStyleClass().add("toolbar-responsive");
+        bar.setCenter(searchField);
+        BorderPane.setAlignment(searchField, Pos.CENTER_LEFT);
+        BorderPane.setMargin(searchField, new Insets(0, 16, 0, 0));
+        bar.setRight(actions);
+        BorderPane.setAlignment(actions, Pos.CENTER_RIGHT);
+
+        bar.widthProperty().addListener((obs, oldW, newW) -> {
+            if (newW.doubleValue() < 640) {
+                if (bar.getRight() != null) {
+                    bar.setRight(null);
+                    BorderPane.setMargin(searchField, new Insets(0, 0, 10, 0));
+                    bar.setTop(searchField);
+                    bar.setCenter(null);
+                    bar.setBottom(actions);
+                    BorderPane.setAlignment(actions, Pos.CENTER_LEFT);
+                }
+            } else {
+                if (bar.getTop() != null) {
+                    bar.setTop(null);
+                    bar.setBottom(null);
+                    BorderPane.setMargin(searchField, new Insets(0, 16, 0, 0));
+                    bar.setCenter(searchField);
+                    bar.setRight(actions);
+                    BorderPane.setAlignment(actions, Pos.CENTER_RIGHT);
+                }
+            }
+        });
+
+        return bar;
     }
 
     public static void showError(String msg, SQLException e) {

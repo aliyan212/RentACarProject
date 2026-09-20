@@ -86,8 +86,7 @@ public class PaymentView {
         table.getColumns().add(amtCol);
         table.getColumns().add(dateCol);
 
-        TextField searchField = ViewHelper.field("🔍 Search payments by sale #, payment #...");
-        searchField.setPrefWidth(270);
+        TextField searchField = ViewHelper.field("🔍 Search payments by sale #, payment #, date...");
         searchField.textProperty().addListener((obs, oldVal, newVal) -> {
             filteredData.setPredicate(p -> {
                 if (newVal == null || newVal.isBlank())
@@ -103,8 +102,7 @@ public class PaymentView {
         addBtn.getStyleClass().add("btn-primary");
         Button deleteBtn = new Button("🗑 Delete");
         deleteBtn.getStyleClass().add("btn-danger");
-        FlowPane toolbar = new FlowPane(10, 10, searchField, addBtn, deleteBtn);
-        toolbar.setAlignment(Pos.CENTER_LEFT);
+        Node toolbar = ViewHelper.createResponsiveToolbar(searchField, addBtn, deleteBtn);
 
         addBtn.setOnAction(e -> showAddDialog().ifPresent(p -> {
             try {
@@ -221,16 +219,13 @@ public class PaymentView {
 
         saleCombo.setPromptText(allSales.isEmpty() ? "No rentals — click + New" : "Type to search…");
 
-        Button newRentalBtn = new Button("+ New Rental");
-        newRentalBtn.getStyleClass().add("btn-secondary");
-        newRentalBtn.setStyle("-fx-font-size: 11px; -fx-padding: 6 12;");
-        newRentalBtn.setOnAction(e -> SalesView.showAddAndSaveDialog().ifPresent(ns -> {
-            allSales.add(0, ns);
-            saleCombo.setValue(ns);
-        }));
-        HBox saleRow = new HBox(8, saleCombo, newRentalBtn);
-        HBox.setHgrow(saleCombo, Priority.ALWAYS);
-        saleRow.setAlignment(Pos.CENTER_LEFT);
+        Button newRentalBtn = ViewHelper.createInlineAddButton("+ New", "Create a new rental booking", () -> {
+            SalesView.showAddAndSaveDialog().ifPresent(ns -> {
+                allSales.add(0, ns);
+                saleCombo.setValue(ns);
+            });
+        });
+        HBox saleRow = ViewHelper.createInlineFieldBox(saleCombo, newRentalBtn);
 
         VBox saleBox = new VBox(4, saleRow, balanceInfoLabel);
 

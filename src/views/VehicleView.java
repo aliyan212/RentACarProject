@@ -76,7 +76,6 @@ public class VehicleView {
         table.getColumns().add(ownerCol);
 
         TextField searchField = ViewHelper.field("🔍 Search fleet by model, ID...");
-        searchField.setPrefWidth(240);
         searchField.textProperty().addListener((obs, oldVal, newVal) -> {
             filteredData.setPredicate(v -> {
                 if (newVal == null || newVal.isBlank())
@@ -92,8 +91,7 @@ public class VehicleView {
         addBtn.getStyleClass().add("btn-primary");
         Button deleteBtn = new Button("🗑 Delete");
         deleteBtn.getStyleClass().add("btn-danger");
-        FlowPane toolbar = new FlowPane(10, 10, searchField, addBtn, deleteBtn);
-        toolbar.setAlignment(Pos.CENTER_LEFT);
+        Node toolbar = ViewHelper.createResponsiveToolbar(searchField, addBtn, deleteBtn);
 
         addBtn.setOnAction(e -> showAddAndSaveDialog().ifPresent(v -> {
             try {

@@ -776,3 +776,54 @@
   -fx-font-size: 12px;
   -fx-font-weight: 700;
 }
+
+/* ==========================================================================
+   Responsive Toolbars & Search Controls
+   ========================================================================== */
+.toolbar-responsive {
+  -fx-background-color: transparent;
+  -fx-padding: 2 0 4 0;
+}
+
+.search-field {
+  -fx-background-color: #21212e;
+  -fx-text-fill: #ffffff;
+  -fx-prompt-text-fill: #6e738a;
+  -fx-border-color: #353549;
+  -fx-border-radius: 8;
+  -fx-background-radius: 8;
+  -fx-padding: 9 14;
+  -fx-font-size: 13px;
+  -fx-min-height: 40px;
+}
+
+.search-field:focused {
+  -fx-border-color: #3d5afe;
+  -fx-effect: dropshadow(gaussian, rgba(61, 90, 254, 0.4), 8, 0, 0, 0);
+}
+
+/* Inline Action Buttons (+ New in dialog forms) */
+.btn-action-inline {
+  -fx-background-color: #27283c;
+  -fx-text-fill: #8c9eff;
+  -fx-border-color: #3d5afe66;
+  -fx-border-radius: 8;
+  -fx-background-radius: 8;
+  -fx-font-size: 12px;
+  -fx-font-weight: 700;
+  -fx-padding: 6 14;
+  -fx-min-height: 38px;
+  -fx-pref-height: 38px;
+  -fx-cursor: hand;
+}
+
+.btn-action-inline:hover {
+  -fx-background-color: #3d5afe;
+  -fx-text-fill: #ffffff;
+  -fx-border-color: #3d5afe;
+  -fx-effect: dropshadow(gaussian, rgba(61, 90, 254, 0.45), 8, 0, 0, 0);
+}
+
+.btn-action-inline:pressed {
+  -fx-background-color: #304ffe;
+}

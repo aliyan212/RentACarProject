@@ -75,7 +75,6 @@ public class CustomerView {
         table.getColumns().add(licenseCol);
 
         TextField searchField = ViewHelper.field("🔍 Search customer by name, CNIC, phone...");
-        searchField.setPrefWidth(260);
         searchField.textProperty().addListener((obs, oldVal, newVal) -> {
             filteredData.setPredicate(c -> {
                 if (newVal == null || newVal.isBlank())
@@ -93,8 +92,7 @@ public class CustomerView {
         addBtn.getStyleClass().add("btn-primary");
         Button deleteBtn = new Button("🗑 Delete");
         deleteBtn.getStyleClass().add("btn-danger");
-        FlowPane toolbar = new FlowPane(10, 10, searchField, addBtn, deleteBtn);
-        toolbar.setAlignment(Pos.CENTER_LEFT);
+        Node toolbar = ViewHelper.createResponsiveToolbar(searchField, addBtn, deleteBtn);
 
         addBtn.setOnAction(e -> showAddAndSaveDialog().ifPresent(c -> {
             try {

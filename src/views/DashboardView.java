@@ -272,8 +272,8 @@ public class DashboardView {
         VBox card = new VBox(4, valueLabel, nameLabel);
         card.setAlignment(Pos.CENTER_LEFT);
         card.setPadding(new Insets(14, 16, 14, 16));
-        card.setMinWidth(140);
-        card.setPrefWidth(160);
+        card.setMinWidth(145);
+        card.setPrefWidth(172);
         card.setMaxWidth(Double.MAX_VALUE);
         card.setStyle(
                 "-fx-background-color: #1a1a24;" +

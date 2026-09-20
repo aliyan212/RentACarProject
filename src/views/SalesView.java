@@ -52,6 +52,13 @@ public class SalesView {
         TableView<Sale> table = new TableView<>(filtered);
         table.getStyleClass().add("data-table");
         table.setColumnResizePolicy(TableView.UNCONSTRAINED_RESIZE_POLICY);
+        table.widthProperty().addListener((obs, oldW, newW) -> {
+            if (newW.doubleValue() > 1240) {
+                table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+            } else {
+                table.setColumnResizePolicy(TableView.UNCONSTRAINED_RESIZE_POLICY);
+            }
+        });
         table.setMinHeight(260);
         table.setMaxHeight(Double.MAX_VALUE);
         VBox.setVgrow(table, Priority.ALWAYS);
@@ -183,8 +190,9 @@ public class SalesView {
         receiptBtn.getStyleClass().add("btn-secondary");
         Button deleteBtn = new Button("🗑 Delete");
         deleteBtn.getStyleClass().add("btn-danger");
-        FlowPane toolbar = new FlowPane(10, 10, addBtn, receiptBtn, deleteBtn);
-        toolbar.setAlignment(Pos.CENTER_LEFT);
+
+        TextField searchField = ViewHelper.field("🔍 Search rentals by ID, CNIC, car, type, status...");
+        Node toolbar = ViewHelper.createResponsiveToolbar(searchField, addBtn, receiptBtn, deleteBtn);
 
         receiptBtn.setOnAction(e -> {
             Sale sel = table.getSelectionModel().getSelectedItem();
@@ -228,6 +236,7 @@ public class SalesView {
                 clearFilters);
 
         Runnable applyFilters = () -> {
+            String query = searchField.getText() == null ? "" : searchField.getText().trim().toLowerCase();
             String status = statusFilter.getValue() == null ? "All" : statusFilter.getValue();
             LocalDate from = fromDate.getValue();
             LocalDate to = toDate.getValue();
@@ -237,6 +246,17 @@ public class SalesView {
             filtered.setPredicate(sale -> {
                 if (sale == null)
                     return false;
+
+                if (!query.isEmpty()) {
+                    boolean matches = String.valueOf(sale.getSaleId()).contains(query)
+                            || String.valueOf(sale.getCustomerCnic()).contains(query)
+                            || String.valueOf(sale.getCarId()).contains(query)
+                            || String.valueOf(sale.getDriverCnic()).contains(query)
+                            || (sale.getRentalType() != null && sale.getRentalType().toLowerCase().contains(query))
+                            || (sale.getPaymentStatus() != null && sale.getPaymentStatus().toLowerCase().contains(query));
+                    if (!matches)
+                        return false;
+                }
 
                 // Status filter
                 if (!"All".equalsIgnoreCase(status)) {
@@ -274,6 +294,7 @@ public class SalesView {
             });
         };
 
+        searchField.textProperty().addListener((obs, o, n) -> applyFilters.run());
         statusFilter.valueProperty().addListener((obs, o, n) -> applyFilters.run());
         fromDate.valueProperty().addListener((obs, o, n) -> applyFilters.run());
         toDate.valueProperty().addListener((obs, o, n) -> applyFilters.run());
@@ -281,6 +302,7 @@ public class SalesView {
         carFilter.textProperty().addListener((obs, o, n) -> applyFilters.run());
 
         clearFilters.setOnAction(e -> {
+            searchField.clear();
             statusFilter.setValue("All");
             fromDate.setValue(null);
             toDate.setValue(null);
@@ -415,16 +437,13 @@ public class SalesView {
             });
         });
 
-        Button newCustBtn = new Button("+ New");
-        newCustBtn.getStyleClass().add("btn-secondary");
-        newCustBtn.setStyle("-fx-font-size: 11px; -fx-padding: 6 12;");
-        newCustBtn.setOnAction(e -> CustomerView.showAddAndSaveDialog().ifPresent(c -> {
-            allCust.add(c);
-            custCombo.setValue(c);
-        }));
-        HBox custBox = new HBox(8, custCombo, newCustBtn);
-        HBox.setHgrow(custCombo, Priority.ALWAYS);
-        custBox.setAlignment(Pos.CENTER_LEFT);
+        Button newCustBtn = ViewHelper.createInlineAddButton("+ New", "Add a new customer", () -> {
+            CustomerView.showAddAndSaveDialog().ifPresent(c -> {
+                allCust.add(c);
+                custCombo.setValue(c);
+            });
+        });
+        HBox custBox = ViewHelper.createInlineFieldBox(custCombo, newCustBtn);
 
         List<Vehicle> vehList = List.of();
         try {
@@ -466,16 +485,13 @@ public class SalesView {
             });
         });
 
-        Button newVehBtn = new Button("+ New");
-        newVehBtn.getStyleClass().add("btn-secondary");
-        newVehBtn.setStyle("-fx-font-size: 11px; -fx-padding: 6 12;");
-        newVehBtn.setOnAction(e -> VehicleView.showAddAndSaveDialog().ifPresent(v -> {
-            allVeh.add(v);
-            carCombo.setValue(v);
-        }));
-        HBox carBox = new HBox(8, carCombo, newVehBtn);
-        HBox.setHgrow(carCombo, Priority.ALWAYS);
-        carBox.setAlignment(Pos.CENTER_LEFT);
+        Button newVehBtn = ViewHelper.createInlineAddButton("+ New", "Add a new vehicle to fleet", () -> {
+            VehicleView.showAddAndSaveDialog().ifPresent(v -> {
+                allVeh.add(v);
+                carCombo.setValue(v);
+            });
+        });
+        HBox carBox = ViewHelper.createInlineFieldBox(carCombo, newVehBtn);
 
         List<Driver> drvList = List.of();
         try {
@@ -523,16 +539,13 @@ public class SalesView {
         });
         driverCombo.setValue(selfDrive);
 
-        Button newDrvBtn = new Button("+ New");
-        newDrvBtn.getStyleClass().add("btn-secondary");
-        newDrvBtn.setStyle("-fx-font-size: 11px; -fx-padding: 6 12;");
-        newDrvBtn.setOnAction(e -> DriverView.showAddAndSaveDialog().ifPresent(d -> {
-            allDrv.add(d);
-            driverCombo.setValue(d);
-        }));
-        HBox drvBox = new HBox(8, driverCombo, newDrvBtn);
-        HBox.setHgrow(driverCombo, Priority.ALWAYS);
-        drvBox.setAlignment(Pos.CENTER_LEFT);
+        Button newDrvBtn = ViewHelper.createInlineAddButton("+ New", "Add a new driver", () -> {
+            DriverView.showAddAndSaveDialog().ifPresent(d -> {
+                allDrv.add(d);
+                driverCombo.setValue(d);
+            });
+        });
+        HBox drvBox = ViewHelper.createInlineFieldBox(driverCombo, newDrvBtn);
 
         DatePicker startPicker = new DatePicker(LocalDate.now());
         startPicker.setMaxWidth(Double.MAX_VALUE);
