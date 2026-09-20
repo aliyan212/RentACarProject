@@ -16,6 +16,8 @@ import java.sql.SQLException;
 import java.text.NumberFormat;
 import java.util.List;
 import java.util.Locale;
+import javafx.animation.*;
+import javafx.util.Duration;
 import javafx.util.StringConverter;
 
 public class DashboardView {
@@ -202,6 +204,9 @@ public class DashboardView {
                             stats.netProfit >= 0 ? "#69db7c" : "#ff6b6b"),
                     statCard("Outstanding", "PKR " + fmt.format(stats.outstanding), "#ffd43b"));
 
+            animateStaggered(opsRow, 0);
+            animateStaggered(finRow, 80);
+
             breakdownLabel.setText("Expense Breakdown — " + periodText);
             List<ExpenseCategoryTotal> cats = List.of();
             try {
@@ -230,6 +235,27 @@ public class DashboardView {
         return scroll;
     }
 
+    private static void animateStaggered(FlowPane pane, int startDelay) {
+        for (int i = 0; i < pane.getChildren().size(); i++) {
+            Node c = pane.getChildren().get(i);
+            c.setOpacity(0.0);
+            c.setTranslateY(8);
+
+            FadeTransition ft = new FadeTransition(Duration.millis(180), c);
+            ft.setFromValue(0.0);
+            ft.setToValue(1.0);
+            ft.setDelay(Duration.millis(startDelay + i * 20));
+
+            TranslateTransition tt = new TranslateTransition(Duration.millis(180), c);
+            tt.setFromY(8);
+            tt.setToY(0);
+            tt.setInterpolator(Interpolator.EASE_OUT);
+            tt.setDelay(Duration.millis(startDelay + i * 20));
+
+            new ParallelTransition(ft, tt).play();
+        }
+    }
+
     private static Label sectionLabel(String text) {
         Label l = new Label(text);
         l.setStyle("-fx-font-size:14px; -fx-font-weight:800; -fx-text-fill:#c5cae9; -fx-padding:8 0 2 0;");
@@ -254,7 +280,8 @@ public class DashboardView {
                         "-fx-background-radius: 12;" +
                         "-fx-border-color: " + accent + "44;" +
                         "-fx-border-radius: 12;" +
-                        "-fx-border-width: 1;");
+                        "-fx-border-width: 1; -fx-cursor: hand;");
+        ViewHelper.addHoverScale(card, 1.03);
         return card;
     }
 }

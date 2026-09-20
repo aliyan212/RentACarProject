@@ -1,6 +1,6 @@
 package main;
 
-import javafx.animation.TranslateTransition;
+import javafx.animation.*;
 import javafx.application.Application;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -365,7 +365,21 @@ public class App extends Application {
         }
 
         Node view = viewSupplier.get();
+        view.setOpacity(0.0);
+        view.setTranslateY(10);
         contentArea.getChildren().setAll(view);
+
+        FadeTransition ft = new FadeTransition(Duration.millis(200), view);
+        ft.setFromValue(0.0);
+        ft.setToValue(1.0);
+        ft.setInterpolator(Interpolator.EASE_OUT);
+
+        TranslateTransition tt = new TranslateTransition(Duration.millis(200), view);
+        tt.setFromY(10);
+        tt.setToY(0);
+        tt.setInterpolator(Interpolator.EASE_OUT);
+
+        new ParallelTransition(ft, tt).play();
 
         // Sync toggle button selections
         selectNavButton(desktopNavGroup, screenName);

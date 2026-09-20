@@ -59,11 +59,91 @@ public class ViewHelper {
     public static ScrollPane createResponsiveScroll(Node content) {
         ScrollPane scroll = new ScrollPane(content);
         scroll.setFitToWidth(true);
+        scroll.setFitToHeight(true);
         scroll.setHbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
         scroll.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
-        scroll.setPannable(true);
+        scroll.setPannable(false);
         scroll.setStyle("-fx-background-color: transparent; -fx-background: transparent; -fx-border-color: transparent; -fx-border-width: 0; -fx-padding: 0;");
+        makeSmooth(scroll);
         return scroll;
+    }
+
+    public static void makeSmooth(ScrollPane scroll) {
+        scroll.setPannable(false);
+        scroll.addEventFilter(javafx.scene.input.ScrollEvent.SCROLL, event -> {
+            double deltaY = event.getDeltaY();
+            if (deltaY != 0) {
+                Node content = scroll.getContent();
+                if (content != null) {
+                    javafx.geometry.Bounds viewport = scroll.getViewportBounds();
+                    double contentHeight = content.getBoundsInLocal().getHeight();
+                    double viewportHeight = viewport != null ? viewport.getHeight() : scroll.getHeight();
+                    double scrollable = contentHeight - viewportHeight;
+                    if (scrollable > 0) {
+                        double multiplier = event.isDirect() ? 1.0 : 2.5;
+                        double step = -(deltaY * multiplier) / scrollable;
+                        double newV = Math.max(0.0, Math.min(1.0, scroll.getVvalue() + step));
+                        scroll.setVvalue(newV);
+                        event.consume();
+                    }
+                }
+            }
+
+            double deltaX = event.getDeltaX();
+            if (deltaX != 0) {
+                Node content = scroll.getContent();
+                if (content != null) {
+                    javafx.geometry.Bounds viewport = scroll.getViewportBounds();
+                    double contentWidth = content.getBoundsInLocal().getWidth();
+                    double viewportWidth = viewport != null ? viewport.getWidth() : scroll.getWidth();
+                    double scrollableX = contentWidth - viewportWidth;
+                    if (scrollableX > 0) {
+                        double multiplierX = event.isDirect() ? 1.0 : 2.5;
+                        double stepX = -(deltaX * multiplierX) / scrollableX;
+                        double newH = Math.max(0.0, Math.min(1.0, scroll.getHvalue() + stepX));
+                        scroll.setHvalue(newH);
+                        event.consume();
+                    }
+                }
+            }
+        });
+    }
+
+    public static void animateDialogEntrance(Node node) {
+        node.setOpacity(0.0);
+        node.setScaleX(0.96);
+        node.setScaleY(0.96);
+
+        javafx.animation.FadeTransition ft = new javafx.animation.FadeTransition(javafx.util.Duration.millis(160), node);
+        ft.setFromValue(0.0);
+        ft.setToValue(1.0);
+        ft.setInterpolator(javafx.animation.Interpolator.EASE_OUT);
+
+        javafx.animation.ScaleTransition st = new javafx.animation.ScaleTransition(javafx.util.Duration.millis(160), node);
+        st.setFromX(0.96);
+        st.setFromY(0.96);
+        st.setToX(1.0);
+        st.setToY(1.0);
+        st.setInterpolator(javafx.animation.Interpolator.EASE_OUT);
+
+        new javafx.animation.ParallelTransition(ft, st).play();
+    }
+
+    public static void addHoverScale(Node node, double scale) {
+        node.setOnMouseEntered(e -> {
+            javafx.animation.ScaleTransition st = new javafx.animation.ScaleTransition(javafx.util.Duration.millis(130), node);
+            st.setToX(scale);
+            st.setToY(scale);
+            st.setInterpolator(javafx.animation.Interpolator.EASE_OUT);
+            st.play();
+        });
+        node.setOnMouseExited(e -> {
+            javafx.animation.ScaleTransition st = new javafx.animation.ScaleTransition(javafx.util.Duration.millis(130), node);
+            st.setToX(1.0);
+            st.setToY(1.0);
+            st.setInterpolator(javafx.animation.Interpolator.EASE_OUT);
+            st.play();
+        });
     }
 
     public static VBox createHeader(String titleText, String subtitleText) {
@@ -118,10 +198,12 @@ public class ViewHelper {
                         if (is != null) stage.getIcons().add(new javafx.scene.image.Image(is));
                     } catch (Exception ignored) {}
                 }
+                animateDialogEntrance(pane);
             }
         });
         if (pane.getScene() != null) {
             pane.getScene().setFill(javafx.scene.paint.Color.web("#191924"));
+            animateDialogEntrance(pane);
         }
     }
 

@@ -98,8 +98,6 @@
                     <mainClass>main.App</mainClass>
                     <options>
                         <option>--enable-native-access=javafx.graphics</option>
-                        <option>-Dprism.order=sw</option>
-                        <option>-Dprism.verbose=true</option>
                     </options>
                 </configuration>
             </plugin>

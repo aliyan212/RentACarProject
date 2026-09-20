@@ -314,10 +314,12 @@
 
 .btn-primary:hover {
   -fx-background-color: #536dfe;
+  -fx-effect: dropshadow(gaussian, rgba(61, 90, 254, 0.5), 10, 0, 0, 2);
 }
 
 .btn-primary:pressed {
   -fx-background-color: #304ffe;
+  -fx-effect: none;
 }
 
 .btn-danger {
@@ -334,10 +336,12 @@
 
 .btn-danger:hover {
   -fx-background-color: #ef5350;
+  -fx-effect: dropshadow(gaussian, rgba(239, 83, 80, 0.4), 8, 0, 0, 2);
 }
 
 .btn-danger:pressed {
   -fx-background-color: #b71c1c;
+  -fx-effect: none;
 }
 
 .btn-secondary {
@@ -353,6 +357,8 @@
 
 .btn-secondary:hover {
   -fx-background-color: #323247;
+  -fx-border-color: #3d5afe55;
+  -fx-border-radius: 8;
 }
 
 /* ==========================================================================

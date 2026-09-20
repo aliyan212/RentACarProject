@@ -53,8 +53,9 @@ public class ExpenseView {
         sortedData.comparatorProperty().bind(table.comparatorProperty());
         table.getStyleClass().add("data-table");
         table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-        table.setMinHeight(280);
-        table.setPrefHeight(420);
+        table.setMinHeight(260);
+        table.setMaxHeight(Double.MAX_VALUE);
+        VBox.setVgrow(table, Priority.ALWAYS);
 
         TableColumn<Expense, Integer> idCol = new TableColumn<>("Exp #");
         idCol.setCellValueFactory(new PropertyValueFactory<>("expenseId"));
@@ -152,6 +153,8 @@ public class ExpenseView {
 
         StackPane card = new StackPane(table);
         card.getStyleClass().add("card");
+        VBox.setVgrow(card, Priority.ALWAYS);
+        VBox.setVgrow(content, Priority.ALWAYS);
         content.getChildren().addAll(title, subtitle, toolbar, card);
         return ViewHelper.createResponsiveScroll(content);
     }

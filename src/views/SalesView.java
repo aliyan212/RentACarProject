@@ -52,8 +52,9 @@ public class SalesView {
         TableView<Sale> table = new TableView<>(filtered);
         table.getStyleClass().add("data-table");
         table.setColumnResizePolicy(TableView.UNCONSTRAINED_RESIZE_POLICY);
-        table.setMinHeight(300);
-        table.setPrefHeight(450);
+        table.setMinHeight(260);
+        table.setMaxHeight(Double.MAX_VALUE);
+        VBox.setVgrow(table, Priority.ALWAYS);
 
         TableColumn<Sale, Integer> idCol = new TableColumn<>("Sale #");
         idCol.setCellValueFactory(new PropertyValueFactory<>("saleId"));
@@ -320,6 +321,8 @@ public class SalesView {
 
         StackPane card = new StackPane(table);
         card.getStyleClass().add("card");
+        VBox.setVgrow(card, Priority.ALWAYS);
+        VBox.setVgrow(content, Priority.ALWAYS);
         content.getChildren().addAll(title, subtitle, toolbar, filters, card);
         return ViewHelper.createResponsiveScroll(content);
     }
