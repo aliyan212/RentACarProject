@@ -233,7 +233,7 @@ public class ViewHelper {
 
     public static Node createResponsiveToolbar(TextField searchField, Node... actionButtons) {
         HBox actions = new HBox(10, actionButtons);
-        actions.setAlignment(Pos.CENTER_RIGHT);
+        actions.setAlignment(Pos.CENTER_LEFT);
 
         if (searchField == null) {
             actions.getStyleClass().add("toolbar-responsive");
@@ -241,41 +241,25 @@ public class ViewHelper {
         }
 
         searchField.setMinWidth(200);
-        searchField.setPrefWidth(380);
+        searchField.setPrefWidth(360);
         searchField.setMaxWidth(560);
         searchField.getStyleClass().add("search-field");
 
-        BorderPane bar = new BorderPane();
-        bar.getStyleClass().add("toolbar-responsive");
-        bar.setCenter(searchField);
-        BorderPane.setAlignment(searchField, Pos.CENTER_LEFT);
-        BorderPane.setMargin(searchField, new Insets(0, 16, 0, 0));
-        bar.setRight(actions);
-        BorderPane.setAlignment(actions, Pos.CENTER_RIGHT);
+        FlowPane toolbar = new FlowPane(12, 10);
+        toolbar.getStyleClass().add("toolbar-responsive");
+        toolbar.setAlignment(Pos.CENTER_LEFT);
+        toolbar.getChildren().addAll(searchField, actions);
 
-        bar.widthProperty().addListener((obs, oldW, newW) -> {
-            if (newW.doubleValue() < 640) {
-                if (bar.getRight() != null) {
-                    bar.setRight(null);
-                    BorderPane.setMargin(searchField, new Insets(0, 0, 10, 0));
-                    bar.setTop(searchField);
-                    bar.setCenter(null);
-                    bar.setBottom(actions);
-                    BorderPane.setAlignment(actions, Pos.CENTER_LEFT);
-                }
-            } else {
-                if (bar.getTop() != null) {
-                    bar.setTop(null);
-                    bar.setBottom(null);
-                    BorderPane.setMargin(searchField, new Insets(0, 16, 0, 0));
-                    bar.setCenter(searchField);
-                    bar.setRight(actions);
-                    BorderPane.setAlignment(actions, Pos.CENTER_RIGHT);
-                }
+        // Dynamically scale search field width according to screen size
+        toolbar.widthProperty().addListener((obs, oldW, newW) -> {
+            double w = newW.doubleValue();
+            if (w > 0) {
+                double targetW = Math.max(220, Math.min(520, w - 300));
+                searchField.setPrefWidth(targetW);
             }
         });
 
-        return bar;
+        return toolbar;
     }
 
     public static void showError(String msg, SQLException e) {
