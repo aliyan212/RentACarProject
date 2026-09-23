@@ -1,8 +1,7 @@
 <div align="center">
   <img src="src/resources/icon.png" width="120" height="120" alt="Roam Logo" style="border-radius: 26px;" />
   <h1>Roam</h1>
-  <p><strong>Next-Generation Fleet &amp; Car Rental Management System</strong></p>
-  <p><em>Drive on your terms. Manage easily.</em></p>
+  <p><strong>Fleet &amp; Car Rental Management System</strong></p>
 
   [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
   [![Java](https://img.shields.io/badge/Java-21-blue.svg)](https://openjdk.org/)
